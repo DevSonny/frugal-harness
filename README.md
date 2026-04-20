@@ -75,14 +75,28 @@ Gemini CLI requires an API key — `gemini login` (OAuth) doesn't work in non-in
 2. Click **Create API key** (free, no credit card required)
 3. Copy the key
 
-**Set it in your shell:**
+The installer will prompt for your key (input is hidden) and automatically configure `~/.gemini/settings.json` to use API key auth.
+
+If you prefer to set it manually:
+
 ```bash
 # Add to ~/.zshrc or ~/.bashrc
 export GEMINI_API_KEY="your-key-here"
 
+# Restrict file permissions
+chmod 600 ~/.zshrc
+
 # Apply immediately
 source ~/.zshrc
 ```
+
+> **Security note:** The API key is stored in plaintext in your shell config. For stronger security, use macOS Keychain:
+> ```bash
+> # Store once
+> security add-generic-password -a "$USER" -s GEMINI_API_KEY -w "your-key-here"
+> # Add to ~/.zshrc to load on shell start
+> export GEMINI_API_KEY=$(security find-generic-password -a "$USER" -s GEMINI_API_KEY -w)
+> ```
 
 **Verify it works:**
 ```bash

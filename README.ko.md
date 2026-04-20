@@ -72,14 +72,28 @@ Gemini CLI는 API 키 방식으로 인증해야 합니다. `gemini login` (OAuth
 2. **Create API key** 클릭 (무료, 신용카드 불필요)
 3. 키 복사
 
-**쉘에 환경변수 설정:**
+인스톨러 실행 시 키를 입력하면 (입력값 화면 미표시) `~/.gemini/settings.json`이 자동으로 API 키 인증 방식으로 설정됩니다.
+
+수동으로 설정하려면:
+
 ```bash
 # ~/.zshrc 또는 ~/.bashrc에 추가
 export GEMINI_API_KEY="your-key-here"
 
+# 파일 권한 제한 (권장)
+chmod 600 ~/.zshrc
+
 # 즉시 적용
 source ~/.zshrc
 ```
+
+> **보안 주의:** API 키가 쉘 설정 파일에 평문으로 저장됩니다. 더 안전한 방법으로 macOS Keychain 사용을 권장합니다:
+> ```bash
+> # 한 번만 저장
+> security add-generic-password -a "$USER" -s GEMINI_API_KEY -w "your-key-here"
+> # ~/.zshrc에 추가하여 쉘 시작 시 자동 로드
+> export GEMINI_API_KEY=$(security find-generic-password -a "$USER" -s GEMINI_API_KEY -w)
+> ```
 
 **동작 확인:**
 ```bash
