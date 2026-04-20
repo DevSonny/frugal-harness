@@ -68,42 +68,22 @@ codex login
 npm install -g @google/gemini-cli
 ```
 
-Gemini CLI requires an API key — `gemini login` (OAuth) doesn't work in non-interactive environments like scripts.
-
-**Get a free API key:**
-1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-2. Click **Create API key** (free, no credit card required)
-3. Copy the key
-
-The installer will prompt for your key (input is hidden) and automatically configure `~/.gemini/settings.json` to use API key auth.
-
-If you prefer to set it manually:
+Gemini CLI requires an API key. Add it to `~/.zshenv` so it works in all environments including Claude Code and scripts:
 
 ```bash
-# Add to ~/.zshrc or ~/.bashrc
-export GEMINI_API_KEY="your-key-here"
-
-# Restrict file permissions
-chmod 600 ~/.zshrc
-
-# Apply immediately
-source ~/.zshrc
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.zshenv
 ```
 
-> **Security note:** The API key is stored in plaintext in your shell config. For stronger security, use macOS Keychain:
-> ```bash
-> # Store once
-> security add-generic-password -a "$USER" -s GEMINI_API_KEY -w "your-key-here"
-> # Add to ~/.zshrc to load on shell start
-> export GEMINI_API_KEY=$(security find-generic-password -a "$USER" -s GEMINI_API_KEY -w)
-> ```
+Then open a new terminal and verify:
 
-**Verify it works:**
 ```bash
 gemini -p "say hi"
 ```
 
-→ Free tier: 1,000 req/day, 1M tokens/day. No paid plan needed.
+Get a free key at: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+(Free tier: 1,000 req/day — no credit card needed)
+
+> **Why `~/.zshenv` and not `~/.zshrc`?** `.zshrc` only loads in interactive terminals. Claude Code and other non-interactive environments skip it, so your key won't be found. `.zshenv` loads everywhere.
 
 ---
 
