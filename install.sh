@@ -28,11 +28,6 @@ if ! command -v gemini &> /dev/null; then
   MISSING=1
 else
   echo "  ✓ Gemini CLI"
-  if [ -z "$GEMINI_API_KEY" ]; then
-    echo "  ⚠ GEMINI_API_KEY not set"
-  else
-    echo "  ✓ GEMINI_API_KEY already set"
-  fi
 fi
 
 if [ $MISSING -eq 1 ]; then
@@ -43,53 +38,6 @@ fi
 
 echo ""
 echo "All prerequisites met. Installing..."
-
-# Set up GEMINI_API_KEY if not already configured
-if command -v gemini &> /dev/null && [ -z "$GEMINI_API_KEY" ]; then
-  echo ""
-  echo "Gemini API key setup"
-  echo "  Get a free key at: https://aistudio.google.com/apikey"
-  echo ""
-  read -s -p "  Enter your GEMINI_API_KEY (input hidden, or press Enter to skip): " GEMINI_KEY_INPUT </dev/tty
-  echo ""
-  if [ -n "$GEMINI_KEY_INPUT" ]; then
-    # Detect shell config file
-    if [ -f "$HOME/.zshrc" ]; then
-      SHELL_RC="$HOME/.zshrc"
-    elif [ -f "$HOME/.bashrc" ]; then
-      SHELL_RC="$HOME/.bashrc"
-    else
-      SHELL_RC="$HOME/.zshrc"
-    fi
-    # Remove any existing GEMINI_API_KEY line and append new one
-    if grep -q "GEMINI_API_KEY" "$SHELL_RC" 2>/dev/null; then
-      sed -i.bak '/GEMINI_API_KEY/d' "$SHELL_RC"
-      rm -f "${SHELL_RC}.bak"
-    fi
-    echo "export GEMINI_API_KEY=\"$GEMINI_KEY_INPUT\"" >> "$SHELL_RC"
-    chmod 600 "$SHELL_RC"
-    export GEMINI_API_KEY="$GEMINI_KEY_INPUT"
-    echo "  ✓ GEMINI_API_KEY added to $SHELL_RC"
-    echo "    Run: source $SHELL_RC"
-    echo ""
-    echo "  ⚠ Security note: API key is stored in plaintext in $SHELL_RC"
-    echo "    macOS Keychain alternative (more secure):"
-    echo "      security add-generic-password -a \"\$USER\" -s GEMINI_API_KEY -w \"your-key\""
-    echo "      export GEMINI_API_KEY=\$(security find-generic-password -a \"\$USER\" -s GEMINI_API_KEY -w)"
-    # Set ~/.gemini/settings.json to use API key auth
-    GEMINI_SETTINGS="$HOME/.gemini/settings.json"
-    if [ -f "$GEMINI_SETTINGS" ]; then
-      sed -i.bak 's/"selectedAuthType": *"[^"]*"/"selectedAuthType": "gemini-api-key"/' "$GEMINI_SETTINGS"
-      rm -f "${GEMINI_SETTINGS}.bak"
-    else
-      mkdir -p "$HOME/.gemini"
-      echo '{"selectedAuthType": "gemini-api-key"}' > "$GEMINI_SETTINGS"
-    fi
-    echo "  ✓ ~/.gemini/settings.json → gemini-api-key"
-  else
-    echo "  Skipped. Set GEMINI_API_KEY manually later."
-  fi
-fi
 
 REPO_RAW="https://raw.githubusercontent.com/DevSonny/frugal-harness/main"
 SKILLS_DIR="$HOME/.claude/skills"
@@ -119,6 +67,14 @@ for skill_name in "${SKILLS[@]}"; do
 done
 
 echo "✅ frugal-harness installed!"
+echo ""
+echo "🔑 API Key Setup (do this manually):"
+echo "   Add to your ~/.zshrc or ~/.bashrc:"
+echo ""
+echo "   export GEMINI_API_KEY=\"your_api_key_here\""
+echo ""
+echo "   Then run: source ~/.zshrc"
+echo "   Get your key: https://aistudio.google.com/apikey"
 echo ""
 echo "Agents:"
 echo "  /plan    → Claude Code (Opus)"
