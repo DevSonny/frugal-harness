@@ -28,15 +28,6 @@ for skill_name in "${SKILLS[@]}"; do
 done
 
 echo ""
-read -p "Continue? [y/N] " -n 1 -r REPLY </dev/tty
-echo ""
-
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-  echo "Aborted."
-  exit 0
-fi
-
-echo ""
 echo "Backing up and removing..."
 
 if [ -f "$CLAUDE_MD" ]; then
