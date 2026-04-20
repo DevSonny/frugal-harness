@@ -79,15 +79,50 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 ---
 
-## How to use
+## How it works
 
-```
-/plan    → Opus thinks and writes a plan
-/exec    → Codex builds from the plan
-/review  → sanity check before commit
-/docs    → Gemini writes README, docs, changelogs
-/ship    → final checklist before push
-```
+Five stages. Run them in order, every time.
+
+### 1. `/plan` → Claude Code (Opus)
+Tell Claude what you want to build in plain English.
+Opus breaks it down into a numbered task list and flags risks upfront.
+> "I need a login page with OAuth and Supabase integration."
+
+### 2. `/exec` → Codex CLI
+Hand the plan to Codex and let it build task by task.
+One task per commit. If scope changes mid-build, stop and re-run `/plan` first.
+
+### 3. `/review` → Claude Code
+Run this before every single commit. No exceptions.
+Claude reads the diff and either says LGTM or gives you a list of issues to fix.
+
+### 4. `/docs` → Gemini CLI (free)
+All text-heavy work goes here — README, changelogs, inline comments, commit messages.
+> "Read this diff and write a changelog entry in Korean and English."
+
+### 5. `/ship` → Claude Code
+Final checklist before push. All tasks done, no debug logs, clean branch, ready to PR.
+
+---
+
+### Slash commands or plain language — both work
+
+The slash commands (`/plan`, `/exec`, etc.) are just shortcuts.
+Under the hood, they load the matching file from `skills/` and pass it to the agent.
+Typing `/plan` is exactly the same as saying:
+
+> "I want to build X. Break it into tasks, flag the risks, give me a numbered list."
+
+**Use whichever feels natural:**
+
+| You prefer... | Just do this |
+|---|---|
+| Slash commands | `/plan`, `/exec`, `/review`, `/docs`, `/ship` |
+| Plain language | Describe what you want — the agents figure out the rest |
+| Mix | Use commands for routine stages, plain language when explaining new features |
+
+The skill files in `skills/` are just saved prompts.
+You can edit them, ignore them, or replace them entirely with your own words.
 
 ---
 
