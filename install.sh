@@ -50,7 +50,7 @@ if command -v gemini &> /dev/null && [ -z "$GEMINI_API_KEY" ]; then
   echo "Gemini API key setup"
   echo "  Get a free key at: https://aistudio.google.com/apikey"
   echo ""
-  read -p "  Enter your GEMINI_API_KEY (or press Enter to skip): " -r GEMINI_KEY_INPUT
+  read -p "  Enter your GEMINI_API_KEY (or press Enter to skip): " -r GEMINI_KEY_INPUT </dev/tty
   if [ -n "$GEMINI_KEY_INPUT" ]; then
     # Detect shell config file
     if [ -f "$HOME/.zshrc" ]; then

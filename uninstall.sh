@@ -28,7 +28,7 @@ for skill_name in "${SKILLS[@]}"; do
 done
 
 echo ""
-read -p "Continue? [y/N] " -n 1 -r
+read -p "Continue? [y/N] " -n 1 -r REPLY </dev/tty
 echo ""
 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
