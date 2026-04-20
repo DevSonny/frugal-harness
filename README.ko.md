@@ -60,11 +60,33 @@ codex login
 → 최소 **ChatGPT Plus** ($20/월) 필요합니다. [openai.com/pricing](https://openai.com/pricing)
 
 ### 3. Gemini CLI
+
 ```bash
 npm install -g @google/gemini-cli
-gemini login
 ```
-→ 무료 티어로 충분합니다. 유료 요금제 불필요. [aistudio.google.com](https://aistudio.google.com)
+
+Gemini CLI는 API 키 방식으로 인증해야 합니다. `gemini login` (OAuth)은 스크립트처럼 비대화형 환경에서 동작하지 않습니다.
+
+**무료 API 키 발급:**
+1. [aistudio.google.com/apikey](https://aistudio.google.com/apikey) 접속
+2. **Create API key** 클릭 (무료, 신용카드 불필요)
+3. 키 복사
+
+**쉘에 환경변수 설정:**
+```bash
+# ~/.zshrc 또는 ~/.bashrc에 추가
+export GEMINI_API_KEY="your-key-here"
+
+# 즉시 적용
+source ~/.zshrc
+```
+
+**동작 확인:**
+```bash
+gemini -p "say hi"
+```
+
+→ 무료 티어: 1,000 req/일, 1M 토큰/일. 유료 요금제 불필요.
 
 ---
 
@@ -73,6 +95,18 @@ gemini login
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
+
+기존 설정 파일이 있으면 덮어쓰기 전에 자동으로 백업합니다.
+
+---
+
+## 언인스톨
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/uninstall.sh | bash
+```
+
+기존 설정 파일을 백업한 뒤 삭제합니다.
 
 ---
 

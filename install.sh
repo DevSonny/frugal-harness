@@ -28,6 +28,11 @@ if ! command -v gemini &> /dev/null; then
   MISSING=1
 else
   echo "  ✓ Gemini CLI"
+  if [ -z "$GEMINI_API_KEY" ]; then
+    echo "  ⚠ GEMINI_API_KEY not set"
+  else
+    echo "  ✓ GEMINI_API_KEY already set"
+  fi
 fi
 
 if [ $MISSING -eq 1 ]; then
@@ -38,6 +43,35 @@ fi
 
 echo ""
 echo "All prerequisites met. Installing..."
+
+# Set up GEMINI_API_KEY if not already configured
+if command -v gemini &> /dev/null && [ -z "$GEMINI_API_KEY" ]; then
+  echo ""
+  echo "Gemini API key setup"
+  echo "  Get a free key at: https://aistudio.google.com/apikey"
+  echo ""
+  read -p "  Enter your GEMINI_API_KEY (or press Enter to skip): " -r GEMINI_KEY_INPUT
+  if [ -n "$GEMINI_KEY_INPUT" ]; then
+    # Detect shell config file
+    if [ -f "$HOME/.zshrc" ]; then
+      SHELL_RC="$HOME/.zshrc"
+    elif [ -f "$HOME/.bashrc" ]; then
+      SHELL_RC="$HOME/.bashrc"
+    else
+      SHELL_RC="$HOME/.zshrc"
+    fi
+    # Remove any existing GEMINI_API_KEY line and append new one
+    if grep -q "GEMINI_API_KEY" "$SHELL_RC" 2>/dev/null; then
+      sed -i.bak '/GEMINI_API_KEY/d' "$SHELL_RC"
+    fi
+    echo "export GEMINI_API_KEY=\"$GEMINI_KEY_INPUT\"" >> "$SHELL_RC"
+    export GEMINI_API_KEY="$GEMINI_KEY_INPUT"
+    echo "  ✓ GEMINI_API_KEY added to $SHELL_RC"
+    echo "    Run: source $SHELL_RC"
+  else
+    echo "  Skipped. Set GEMINI_API_KEY manually later."
+  fi
+fi
 
 REPO_RAW="https://raw.githubusercontent.com/DevSonny/frugal-harness/main"
 SKILLS_DIR="$HOME/.claude/skills"

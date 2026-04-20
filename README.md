@@ -63,11 +63,33 @@ codex login
 → Requires **ChatGPT Plus** ($20/mo) at minimum. [openai.com/pricing](https://openai.com/pricing)
 
 ### 3. Gemini CLI
+
 ```bash
 npm install -g @google/gemini-cli
-gemini login
 ```
-→ Free tier is enough. No paid plan needed. [aistudio.google.com](https://aistudio.google.com)
+
+Gemini CLI requires an API key — `gemini login` (OAuth) doesn't work in non-interactive environments like scripts.
+
+**Get a free API key:**
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Click **Create API key** (free, no credit card required)
+3. Copy the key
+
+**Set it in your shell:**
+```bash
+# Add to ~/.zshrc or ~/.bashrc
+export GEMINI_API_KEY="your-key-here"
+
+# Apply immediately
+source ~/.zshrc
+```
+
+**Verify it works:**
+```bash
+gemini -p "say hi"
+```
+
+→ Free tier: 1,000 req/day, 1M tokens/day. No paid plan needed.
 
 ---
 
@@ -76,6 +98,18 @@ gemini login
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
+
+Backs up any existing config before overwriting.
+
+---
+
+## Uninstall
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/uninstall.sh | bash
+```
+
+Backs up your current config before removing it.
 
 ---
 
