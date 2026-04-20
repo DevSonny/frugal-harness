@@ -42,12 +42,30 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 ---
 
+## The three-agent lineup
+
+| Agent | Plan | Role |
+|---|---|---|
+| **Claude Code** (Opus) | Claude Pro $20/mo | Planning, architecture decisions |
+| **Codex CLI** | ChatGPT Plus $20/mo | Implementation, coding |
+| **Gemini CLI** | Free (1,000 req/day) | Docs, README, changelogs, comments |
+
+Total: **$40/mo** — no $100 plan needed.
+
+Gemini CLI handles everything text-heavy:
+README, API docs, inline comments, changelogs, commit messages.
+Its 1M token context window makes it surprisingly good at reading
+a whole codebase and writing docs that actually make sense.
+
+---
+
 ## How to use
 
 ```
-/plan → Opus thinks and writes a plan
+/plan → Claude Opus thinks and writes a plan
 /exec → Codex builds from the plan
 /review → quick sanity check before commit
+/docs → Gemini writes README, docs, changelogs
 /ship → final checklist before push
 ```
 
@@ -113,12 +131,30 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 ---
 
+## 3-에이전트 구성
+
+| 에이전트 | 요금제 | 역할 |
+|---|---|---|
+| **Claude Code** (Opus) | Claude Pro $20/월 | 계획, 아키텍처 결정 |
+| **Codex CLI** | ChatGPT Plus $20/월 | 구현, 코딩 |
+| **Gemini CLI** | 무료 (1,000 req/일) | 문서, README, 변경 로그, 주석 |
+
+합계: **월 $40** — $100짜리 요금제 필요 없습니다.
+
+Gemini CLI는 텍스트가 많은 작업을 전담합니다.
+README, API 문서, 인라인 주석, 변경 로그, 커밋 메시지 등.
+1M 토큰 컨텍스트 덕분에 코드베이스 전체를 읽고
+실제로 말이 되는 문서를 작성하는 데 꽤 뛰어납니다.
+
+---
+
 ## 사용법
 
 ```
-/plan → Opus가 계획 먼저 작성
+/plan → Claude Opus가 계획 작성
 /exec → 계획 기반으로 Codex가 구현
 /review → 커밋 전 빠른 점검
+/docs → Gemini가 README, 문서, 변경 로그 작성
 /ship → 푸시 전 최종 체크
 ```
 
