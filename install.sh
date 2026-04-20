@@ -39,6 +39,7 @@ fi
 echo ""
 echo "All prerequisites met. Installing..."
 
+REPO_RAW="https://raw.githubusercontent.com/DevSonny/frugal-harness/main"
 SKILLS_DIR="$HOME/.claude/skills"
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 BACKUP_SUFFIX=".bak.$(date +%Y%m%d%H%M%S)"
@@ -52,14 +53,17 @@ fi
 # Create skills dir
 mkdir -p "$SKILLS_DIR"
 
-# Copy files
-cp CLAUDE.md "$CLAUDE_MD"
-for skill in skills/*.md; do
-  skill_name=$(basename "$skill")
-  if [ -f "$SKILLS_DIR/$skill_name" ]; then
-    cp "$SKILLS_DIR/$skill_name" "$SKILLS_DIR/${skill_name}${BACKUP_SUFFIX}"
+# Download CLAUDE.md
+curl -fsSL "$REPO_RAW/CLAUDE.md" -o "$CLAUDE_MD"
+
+# Download skill files
+SKILLS=(plan exec docs review ship)
+for skill_name in "${SKILLS[@]}"; do
+  local_path="$SKILLS_DIR/${skill_name}.md"
+  if [ -f "$local_path" ]; then
+    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
   fi
-  cp "$skill" "$SKILLS_DIR/$skill_name"
+  curl -fsSL "$REPO_RAW/skills/${skill_name}.md" -o "$local_path"
 done
 
 echo "✅ frugal-harness installed!"
