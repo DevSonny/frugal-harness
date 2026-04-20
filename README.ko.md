@@ -37,13 +37,16 @@ YC CEO Garry Tan이 만든 **[gstack](https://github.com/garrytan/gstack)** 과
 | `skills/review.md` | 커밋 전에 한 번 더 |
 | `skills/docs.md` | 문서는 Gemini에게 넘기기 |
 | `skills/ship.md` | 푸시 전 체크리스트 |
+| `scripts/usage.sh` | 세 CLI 사용량 통합 리포트 |
+| `scripts/usage-statusline.sh` | Claude Code 상태 표시줄 — 실시간 사용량 |
+| `scripts/lib-claude-window.sh` | Claude 5h/7d 롤링 윈도우 계산 헬퍼 |
 | `install.sh` | 원라이너 설치 |
 
 ---
 
 ## 사전 준비
 
-frugal-harness를 설치하기 전에 아래 세 가지를 먼저 세팅해야 합니다.
+frugal-harness를 설치하기 전에 아래 네 가지를 먼저 세팅해야 합니다.
 
 ### 1. Claude Code
 ```bash
@@ -82,6 +85,12 @@ gemini -p "say hi"
 
 > **왜 `~/.zshrc`가 아닌 `~/.zshenv`인가?** `.zshrc`는 대화형 터미널에서만 로드됩니다. Claude Code 같은 비대화형 환경에서는 무시되어 키가 없는 것처럼 동작합니다. `.zshenv`는 모든 환경에서 로드됩니다.
 
+### 4. jq
+```bash
+brew install jq
+```
+사용량 스크립트에서 CLI 세션 데이터 파싱에 사용됩니다.
+
 ---
 
 ## 설치
@@ -90,7 +99,39 @@ gemini -p "say hi"
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
 
+설치 시 자동으로:
+- `usage` 커맨드 설치 (세 CLI 통합 사용량 리포트)
+- Claude Code 상태 표시줄에 실시간 사용량 설정
+- Gemini 기본 모델을 `gemini-2.5-flash-lite` (가장 저렴)으로 고정
+
 기존 설정 파일이 있으면 덮어쓰기 전에 자동으로 백업합니다.
+
+---
+
+## 사용량 대시보드
+
+언제든 `usage`를 실행하면 세 CLI의 잔여 사용량을 한눈에 볼 수 있습니다:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ CLI USAGE  (2026-04-20 22:30)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Claude Code  (rolling window from project JSONL)
+   Session 5h: ████████████████████  81% left  (375/475 msgs used)
+   Weekly 7d:  ██████████████░░░░░░  86% left  (378/2700 msgs used)
+
+Codex CLI  (Plus · gpt-5.4 · data from 2m ago)
+   5h limit:   ████████████████████  99% left  (resets 02:56)
+   Weekly:     ██████░░░░░░░░░░░░░░  28% left  (resets Apr 24)
+
+Gemini CLI  (gemini-2.5-flash-lite)
+   Today:      4 API calls — in 33k / out 1.4k
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+색상 기준: 초록 ≥ 50% · 노랑 20–50% · 빨강 < 20% 잔여.
+
+Claude Code 상태 표시줄에도 동일한 데이터가 작업 중에 실시간으로 표시됩니다.
 
 ---
 

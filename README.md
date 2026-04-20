@@ -40,13 +40,16 @@ and strips them down to what actually matters.
 | `skills/review.md` | Catch issues before committing |
 | `skills/docs.md` | Hand off docs to Gemini |
 | `skills/ship.md` | Checklist before you push |
+| `scripts/usage.sh` | Detailed usage report for all three CLIs |
+| `scripts/usage-statusline.sh` | Claude Code statusline — live usage at a glance |
+| `scripts/lib-claude-window.sh` | Rolling 5h/7d window helper for Claude stats |
 | `install.sh` | One-liner setup |
 
 ---
 
 ## Prerequisites
 
-Before installing frugal-harness, make sure these three are set up:
+Before installing frugal-harness, make sure these four are set up:
 
 ### 1. Claude Code
 ```bash
@@ -85,6 +88,12 @@ Get a free key at: [aistudio.google.com/apikey](https://aistudio.google.com/apik
 
 > **Why `~/.zshenv` and not `~/.zshrc`?** `.zshrc` only loads in interactive terminals. Claude Code and other non-interactive environments skip it, so your key won't be found. `.zshenv` loads everywhere.
 
+### 4. jq
+```bash
+brew install jq
+```
+Used by the usage scripts to parse CLI session data.
+
 ---
 
 ## Install
@@ -93,7 +102,39 @@ Get a free key at: [aistudio.google.com/apikey](https://aistudio.google.com/apik
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
 
+The installer also:
+- Sets up the `usage` command for a combined usage report
+- Configures the Claude Code statusline with live Claude / Codex / Gemini usage
+- Pins Gemini's default model to `gemini-2.5-flash-lite` (cheapest)
+
 Backs up any existing config before overwriting.
+
+---
+
+## Usage dashboard
+
+Run `usage` anytime to see remaining quota across all three CLIs:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ CLI USAGE  (2026-04-20 22:30)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Claude Code  (rolling window from project JSONL)
+   Session 5h: ████████████████████  81% left  (375/475 msgs used)
+   Weekly 7d:  ██████████████░░░░░░  86% left  (378/2700 msgs used)
+
+Codex CLI  (Plus · gpt-5.4 · data from 2m ago)
+   5h limit:   ████████████████████  99% left  (resets 02:56)
+   Weekly:     ██████░░░░░░░░░░░░░░  28% left  (resets Apr 24)
+
+Gemini CLI  (gemini-2.5-flash-lite)
+   Today:      4 API calls — in 33k / out 1.4k
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+Color coding: green ≥ 50% · yellow 20–50% · red < 20% remaining.
+
+The Claude Code statusline shows the same data inline while you work.
 
 ---
 

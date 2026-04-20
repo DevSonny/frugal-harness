@@ -30,6 +30,13 @@ else
   echo "  ✓ Gemini CLI"
 fi
 
+if ! command -v jq &> /dev/null; then
+  echo "  ✗ jq not found        → brew install jq"
+  MISSING=1
+else
+  echo "  ✓ jq"
+fi
+
 if [ $MISSING -eq 1 ]; then
   echo ""
   echo "⚠ Install missing tools above, then re-run this script."
@@ -65,6 +72,47 @@ for skill_name in "${SKILLS[@]}"; do
   fi
   curl -fsSL "$REPO_RAW/skills/${skill_name}.md" -o "$local_path"
 done
+
+# Install usage scripts
+SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
+BIN_DIR="$HOME/.local/bin"
+mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
+for s in usage.sh usage-statusline.sh lib-claude-window.sh; do
+  curl -fsSL "$REPO_RAW/scripts/$s" -o "$SCRIPTS_DIR/$s"
+  chmod +x "$SCRIPTS_DIR/$s"
+done
+ln -sf "$SCRIPTS_DIR/usage.sh" "$BIN_DIR/usage"
+echo "  ✓ usage scripts → $SCRIPTS_DIR"
+if ! echo "$PATH" | grep -q "$BIN_DIR"; then
+  echo "    ⚠ Add to ~/.zshenv: export PATH=\"\$HOME/.local/bin:\$PATH\""
+fi
+
+# Configure Claude Code statusline
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+mkdir -p "$HOME/.claude"
+if [ -f "$CLAUDE_SETTINGS" ]; then
+  cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
+  tmp=$(mktemp)
+  jq --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
+     '.statusLine = {type: "command", command: $cmd}' \
+     "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
+else
+  jq -n --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
+     '{statusLine: {type: "command", command: $cmd}}' > "$CLAUDE_SETTINGS"
+fi
+echo "  ✓ Claude Code statusline configured"
+
+# Pin Gemini default model to gemini-2.5-flash-lite (cheapest)
+GEMINI_SETTINGS="$HOME/.gemini/settings.json"
+mkdir -p "$HOME/.gemini"
+if [ -f "$GEMINI_SETTINGS" ]; then
+  cp "$GEMINI_SETTINGS" "${GEMINI_SETTINGS}${BACKUP_SUFFIX}"
+  tmp=$(mktemp)
+  jq '.model = {name: "gemini-2.5-flash-lite"}' "$GEMINI_SETTINGS" > "$tmp" && mv "$tmp" "$GEMINI_SETTINGS"
+else
+  jq -n '{model: {name: "gemini-2.5-flash-lite"}}' > "$GEMINI_SETTINGS"
+fi
+echo "  ✓ Gemini default model: gemini-2.5-flash-lite"
 
 echo "✅ frugal-harness installed!"
 echo ""
