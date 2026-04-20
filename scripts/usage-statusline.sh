@@ -5,7 +5,9 @@ CLAUDE_SESSION_LIMIT=${CLAUDE_SESSION_LIMIT:-475}
 CLAUDE_WEEKLY_LIMIT=${CLAUDE_WEEKLY_LIMIT:-2700}
 
 # shellcheck source=/dev/null
-source "$(dirname "$0")/lib-claude-window.sh"
+_self="$0"; while [ -L "$_self" ]; do _self="$(readlink "$_self")"; done
+SCRIPT_DIR="$(cd "$(dirname "$_self")" && pwd)"
+source "$SCRIPT_DIR/lib-claude-window.sh"
 
 input=$(cat)
 project_dir=$(printf '%s' "$input" | jq -r '.workspace.project_dir')

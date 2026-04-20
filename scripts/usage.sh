@@ -5,7 +5,9 @@ CLAUDE_SESSION_LIMIT=${CLAUDE_SESSION_LIMIT:-475}
 CLAUDE_WEEKLY_LIMIT=${CLAUDE_WEEKLY_LIMIT:-2700}
 
 # shellcheck source=/dev/null
-source "$(dirname "$0")/lib-claude-window.sh"
+_self="$0"; while [ -L "$_self" ]; do _self="$(readlink "$_self")"; done
+SCRIPT_DIR="$(cd "$(dirname "$_self")" && pwd)"
+source "$SCRIPT_DIR/lib-claude-window.sh"
 
 GN=$'\033[32m' YL=$'\033[33m' RD=$'\033[31m'
 CY=$'\033[36m' DM=$'\033[2m'  RS=$'\033[0m'
