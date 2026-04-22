@@ -19,11 +19,12 @@ YC CEO Garry Tan이 만든 **[gstack](https://github.com/garrytan/gstack)** 과
 
 | 에이전트 | 요금제 | 역할 |
 |---|---|---|
-| **Claude Code** (Opus) | Claude Pro $20/월 | 계획, 아키텍처, 리뷰 |
-| **Codex CLI** | ChatGPT Plus $20/월 | 구현, 코딩 |
-| **Gemini CLI** | 무료 (1,000 req/일) | 문서, README, 변경 로그, 주석 |
+| **Claude Code** (Opus) | Claude Pro $20/월 | **계획 전용** — 아키텍처, 태스크 분해 |
+| **Codex CLI** | ChatGPT Plus $20/월 | 구현, 리뷰, 커밋 & 푸시 |
+| **Gemini CLI** | 무료 (1,000 req/일) | 문서 전담 — README, 변경 로그, 주석, 커밋 메시지 |
 
 **합계: 월 $40** — $100짜리 요금제 필요 없습니다.
+Fallback: Codex나 Gemini 할당량이 소진되면 Claude가 임시 대체합니다.
 
 ---
 
@@ -117,9 +118,11 @@ gemini -p 'say hi'   # optional — 1 free-tier request
 (무료 티어: 1,000 req/일 — 신용카드 불필요)
 
 ### 4. jq
-```bash
-brew install jq
-```
+OS에 따라 자동으로 감지되어 설치됩니다.
+macOS:  `brew install jq`
+Ubuntu/Debian: `sudo apt install jq`
+Fedora/RHEL: `sudo dnf install jq`
+Arch: `sudo pacman -S jq`
 사용량 스크립트에서 CLI 세션 데이터 파싱에 사용됩니다.
 
 ---
@@ -180,24 +183,21 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/uninst
 
 5단계입니다. 매번 순서대로 실행하면 됩니다.
 
-### 1. `/plan` → Claude Code (Opus)
-무엇을 만들지 자연어로 설명합니다.
-Opus가 번호가 매겨진 태스크 목록으로 정리하고 리스크를 미리 짚어줍니다.
+### 1. /plan → Claude Code (Opus) — 태스크 분해, 리스크 플래그. Claude만 이 단계를 담당합니다.
+무엇을 만들지 자연어로 설명합니다. Opus가 번호가 매겨진 태스크 목록으로 정리하고 리스크를 미리 짚어줍니다.
 > "OAuth랑 Supabase 연동된 로그인 페이지 만들어야 해."
 
-### 2. `/exec` → Codex CLI
-계획서를 Codex에 넘겨서 태스크 하나씩 구현합니다.
-빌드 중 범위가 바뀌면 멈추고 `/plan`부터 다시 시작합니다.
+### 2. /exec → Codex CLI — 태스크 단위로 구현합니다. 태스크 하나당 커밋 하나.
+계획서를 Codex에 넘겨서 태스크 하나씩 구현합니다. 빌드 중 범위가 바뀌면 멈추고 `/plan`부터 다시 시작합니다.
 
-### 3. `/review` → Claude Code
-커밋 전에 반드시 실행합니다. 예외 없습니다.
-Claude가 diff를 읽고 LGTM이거나, 고쳐야 할 문제 목록을 알려줍니다.
+### 3. /review → Codex CLI — diff 셀프 리뷰. LGTM이거나 수정 목록을 돌려줍니다.
+커밋 전에 반드시 실행합니다. 예외 없습니다. Codex가 diff를 읽고 LGTM이거나, 고쳐야 할 문제 목록을 알려줍니다.
 
-### 4. `/docs` → Gemini CLI (무료)
+### 4. /docs → Gemini CLI — README, 변경 로그, 주석, 커밋 메시지. 텍스트 작업 전부, 무료.
 텍스트가 많은 작업은 전부 여기서 합니다 — README, 변경 로그, 인라인 주석, 커밋 메시지.
 > "이 diff 읽고 한국어랑 영어로 변경 로그 작성해줘."
 
-### 5. `/ship` → Claude Code
+### 5. /ship → Codex CLI — git add/commit/push. 커밋 메시지는 Gemini가 생성, 실행은 Codex가 담당.
 푸시 전 최종 체크리스트입니다. 모든 태스크 완료, 디버그 로그 없음, 브랜치 정리, PR 준비 확인합니다.
 
 ---

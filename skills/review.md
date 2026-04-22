@@ -14,4 +14,4 @@ Before every commit.
 LGTM or a list of issues to fix before committing.
 
 ## Agent
-Claude Code
+Codex CLI

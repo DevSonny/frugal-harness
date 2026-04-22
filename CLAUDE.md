@@ -1,11 +1,11 @@
 # frugal-harness
 
 ## Agent roles
-- **Planning & architecture** → Claude Code (Opus)
-- **Implementation & coding** → Codex CLI
-- **Docs, README, changelogs, comments** → Gemini CLI
-- **Review gate** → Claude Code
-- **Ship checklist** → Claude Code
+| Agent | Plan | Role |
+|---|---|---|
+| **Claude Code** (Opus) | Claude Pro $20/mo | **Planning only** — /plan |
+| **Codex CLI** | ChatGPT Plus $20/mo | /exec (build) + /review + /ship (commit & push) |
+| **Gemini CLI** | Free (1,000 req/day) | /docs — README, changelogs, comments, commit messages |
 
 ## Skills
 @skills/plan.md
@@ -24,15 +24,16 @@
 ---
 
 ## 역할 분리 (핵심)
-- 계획/설계/아키텍처: 네가 직접 처리 (opusplan이 자동으로 Opus 배정)
+- 계획/설계/아키텍처: 네가 직접 처리 (Opus 전용 — 토큰 비싸니까 이것만)
 - 구현/코딩/버그 수정: Bash로 codex exec "[내용]" 실행해서 Codex에 위임
-- 문서, README, 변경 로그, 주석: Gemini CLI에 위임
-- 절대 네가 직접 코드 구현하지 마 — 구현과 검증은 항상 Codex 담당
+- 리뷰/커밋/푸시: codex exec으로 Codex에 위임 (/review, /ship 모두)
+- 문서, README, 변경 로그, 주석, 커밋 메시지: Gemini CLI에 위임
+- 절대 네가 직접 코드 구현하거나 리뷰하거나 커밋하지 마 — Claude는 계획 전용
 - codex exec 실행 시 반드시 파일 경로, 기술 스택, 완료 기준을 함께 전달해
 - 계획 단계에서 코드 쓰지 마 — 계획 확정 후 codex exec으로만 구현해
 
 ## 워크플로우 순서
-새 기능은 반드시 이 순서로: /plan → /exec → /review → /docs → /ship
+새 기능은 반드시 이 순서로: /plan(Claude) → /exec(Codex) → /review(Codex) → /docs(Gemini) → /ship(Codex)
 
 ## 메모리 (항상)
 - 작업 시작 전 .notes/memory.md 가 있으면 반드시 먼저 읽어
@@ -65,8 +66,13 @@
 - any 타입 금지 — 근본 원인 수정
 - 디버그 로그, 데드 코드 남기지 마
 
+## Fallback 규칙
+- Codex 또는 Gemini 할당량 소진 시에 한해 Claude가 해당 작업을 임시 대체
+- usage 대시보드로 잔여량 확인 후 수동 판단 (자동 전환 아님)
+- 소진 복구 후에는 반드시 원래 에이전트 역할로 복귀
+
 ## 완료 체크리스트 (모든 작업)
 1. codex exec "npx playwright test && npx eslint . && tsc --noEmit"
 2. codex exec "remove console.log and debug code"
-3. 구현 후 보안/성능/프로덕션 버그 관점에서 스스로 검토해
+3. gemini -p로 커밋 메시지 생성 후 codex exec으로 git add/commit/push 실행
 4. .notes/memory.md 업데이트

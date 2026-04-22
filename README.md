@@ -22,11 +22,12 @@ and strips them down to what actually matters.
 
 | Agent | Plan | Role |
 |---|---|---|
-| **Claude Code** (Opus) | Claude Pro $20/mo | Planning, architecture, review |
-| **Codex CLI** | ChatGPT Plus $20/mo | Implementation, coding |
-| **Gemini CLI** | Free (1,000 req/day) | Docs, README, changelogs, comments |
+| **Claude Code** (Opus) | Claude Pro $20/mo | **Planning only** — architecture & task breakdown |
+| **Codex CLI** | ChatGPT Plus $20/mo | Build, review, commit & push |
+| **Gemini CLI** | Free (1,000 req/day) | All docs — README, changelogs, comments, commit messages |
 
 **Total: $40/mo.** No $100 plan needed.
+Fallback: if Codex or Gemini hits its quota, Claude covers that role temporarily.
 
 ---
 
@@ -70,8 +71,6 @@ codex login
 ```bash
 npm install -g @google/gemini-cli
 ```
-
-Gemini CLI requires an API key. Add it to `~/.zshenv` so it works in all environments including Claude Code and scripts:
 
 Gemini CLI requires an API key. Add it to your shell config:
 
@@ -122,9 +121,14 @@ Get a free key at: [aistudio.google.com/apikey](https://aistudio.google.com/apik
 (Free tier: 1,000 req/day — no credit card needed)
 
 ### 4. jq
-```bash
-brew install jq
+The installation command is automatically detected based on your OS:
 ```
+macOS:  brew install jq
+Ubuntu/Debian: sudo apt install jq
+Fedora/RHEL: sudo dnf install jq
+Arch: sudo pacman -S jq
+```
+(No need to check yourself during installation as it's auto-detected)
 Used by the usage scripts to parse CLI session data.
 
 ---
@@ -185,25 +189,11 @@ Backs up your current config before removing it.
 
 Five stages. Run them in order, every time.
 
-### 1. `/plan` → Claude Code (Opus)
-Tell Claude what you want to build in plain English.
-Opus breaks it down into a numbered task list and flags risks upfront.
-> "I need a login page with OAuth and Supabase integration."
-
-### 2. `/exec` → Codex CLI
-Hand the plan to Codex and let it build task by task.
-One task per commit. If scope changes mid-build, stop and re-run `/plan` first.
-
-### 3. `/review` → Claude Code
-Run this before every single commit. No exceptions.
-Claude reads the diff and either says LGTM or gives you a list of issues to fix.
-
-### 4. `/docs` → Gemini CLI (free)
-All text-heavy work goes here — README, changelogs, inline comments, commit messages.
-> "Read this diff and write a changelog entry in Korean and English."
-
-### 5. `/ship` → Claude Code
-Final checklist before push. All tasks done, no debug logs, clean branch, ready to PR.
+1. /plan → Claude Code (Opus) — Break it down, flag risks. Only Claude touches this step.
+2. /exec → Codex CLI — Build task by task. One task per commit.
+3. /review → Codex CLI — Self-review the diff. LGTM or a list of issues to fix.
+4. /docs → Gemini CLI — README, changelogs, comments, commit messages. All text work, free.
+5. /ship → Codex CLI — git add/commit/push. Commit message from Gemini, execution by Codex.
 
 ---
 
