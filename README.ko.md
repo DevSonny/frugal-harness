@@ -2,6 +2,12 @@
 
 # frugal-harness
 
+<p align="center">
+  <img src="generated-image.jpg" width="160" />
+  <br/>
+  <strong>DevSonny</strong> — FC Seoul을 사랑하는 개발자 ⚽
+</p>
+
 **Opus로 계획하고, Codex로 만들고, Gemini로 문서 쓰고, 저렴하게 배포하세요.**
 
 대부분의 AI 코딩 셋업은 $100짜리 요금제를 기준으로 만들어져 있습니다.

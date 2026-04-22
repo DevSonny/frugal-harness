@@ -2,6 +2,12 @@
 
 # frugal-harness
 
+<p align="center">
+  <img src="generated-image.jpg" width="160" />
+  <br/>
+  <strong>DevSonny</strong> — A developer who loves FC Seoul ⚽
+</p>
+
 **Plan with Opus. Build with Codex. Document with Gemini. Ship cheap.**
 
 Most AI coding setups assume you're on a $100/mo plan.
