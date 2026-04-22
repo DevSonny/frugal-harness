@@ -187,34 +187,154 @@ Backs up your current config before removing it.
 
 ## How it works
 
-Five stages. Run them in order, every time.
+### The big picture
 
-1. /plan → Claude Code (Opus) — Break it down, flag risks. Only Claude touches this step.
-2. /exec → Codex CLI — Build task by task. One task per commit.
-3. /review → Codex CLI — Self-review the diff. LGTM or a list of issues to fix.
-4. /docs → Gemini CLI — README, changelogs, comments, commit messages. All text work, free.
-5. /ship → Codex CLI — git add/commit/push. Commit message from Gemini, execution by Codex.
+You only ever talk to **one CLI: Claude Code.**
+
+Claude reads the rules in `CLAUDE.md`, figures out which stage you're in, and silently calls Codex or Gemini as sub-processes (`codex exec "..."` and `gemini -p "..."`) when it's their turn. Output streams back to the same session. No juggling three terminals.
+
+Mental model: **Claude is the conductor. Codex and Gemini are the players.** You only care which stage you're in — Claude handles the hand-offs.
+
+---
+
+### The 5-stage flow
+
+```
+ /plan  ──▶  /exec  ──▶  /review  ──▶  /docs  ──▶  /ship
+   │           │            │            │           │
+ Claude      Codex        Codex        Gemini       Codex
+ (Opus)    (GPT-5.4)    (GPT-5.4)      (free)     (GPT-5.4)
+   │           │            │            │           │
+  think       build    sanity-check     docs     commit+push
+```
+
+Every feature walks all 5 stages in order. No skipping.
+
+---
+
+### Stage 1 — `/plan` → Claude (Opus)
+
+**You:** describe the feature in plain English.
+> "Add a dark mode toggle to settings. Persist across sessions. Default to system preference."
+
+**Claude:** breaks it into a numbered task list, flags risks, and calls out unknowns upfront.
+> *Task 1: Add `theme` field to settings schema*
+> *Task 2: Create `ThemeContext` with React Context*
+> *Task 3: Toggle UI on settings page*
+> *Task 4: `localStorage` persistence + `prefers-color-scheme` fallback*
+> *Risk: existing CSS uses hard-coded hex values — audit first.*
+
+**Output:** an ordered task list you can approve, edit, or reject.
+
+**Why Claude here:** Opus is the strongest reasoner available. One good plan prevents ten bad commits — this is where the expensive token pays off.
+
+---
+
+### Stage 2 — `/exec` → Codex
+
+**You:** `/exec` (or "let's start building").
+
+**Claude:** runs `codex exec "Implement task 1: <details>"` in the background. Codex's output streams back to your session.
+
+**Codex:** picks the first unchecked task, implements it, runs tests, shows you the diff.
+
+**Rule:** one task at a time. If scope creeps mid-build, stop and re-run `/plan`.
+
+**Why Codex here:** ChatGPT Plus has its own quota, separate from Claude. Heavy coding doesn't drain your Claude session.
+
+---
+
+### Stage 3 — `/review` → Codex
+
+**You:** `/review` before **every** commit. No exceptions.
+
+**Codex checks:**
+- Does the code match the plan?
+- Any obvious bugs or missed edge cases?
+- Hardcoded values that should be config?
+- Is the diff minimal and clean?
+- Are tests passing?
+
+**Output:** either `LGTM` or a concrete list of issues.
+
+**Caveat:** Codex is reviewing code it just wrote. For high-stakes changes (auth, migrations, security), ask Claude for a second independent pass.
+
+---
+
+### Stage 4 — `/docs` → Gemini
+
+**You:** `/docs update CHANGELOG` / `/docs add comments to this file` / etc.
+
+**Claude:** runs `gemini -p "<your request>"` in the background.
+
+**Gemini:** reads the relevant code or diff and writes prose — README updates, changelog entries, inline comments, commit messages.
+
+**Why Gemini here:** 1,000 free requests/day. Docs are repetitive and high-volume — burning Claude or Codex tokens here is wasteful. Gemini's 1M-token context also eats whole codebases without flinching.
+
+---
+
+### Stage 5 — `/ship` → Codex
+
+**You:** `/ship` when you're ready.
+
+**What happens:**
+1. Codex runs the ship checklist (tests pass, no debug logs, clean branch).
+2. Gemini writes the commit message from the staged diff.
+3. Codex runs `git add -A && git commit -m "<message>" && git push`.
+
+**Output:** a clean commit pushed to `origin`.
+
+**Why the split:** Gemini writes prose well and cheaply; Codex already has shell access and test-running muscle. Claude doesn't touch this stage.
+
+---
+
+### End-to-end: what a real feature looks like
+
+Say you're building a dark-mode toggle:
+
+1. **You → Claude:** *"Add a dark mode toggle to settings, persist across sessions."*
+2. **Claude** returns a 4-task plan. You approve.
+3. **You:** `/exec`. Codex builds Task 1, shows the diff. `/exec` again. Task 2. And so on.
+4. **You:** `/review`. Codex flags one issue: hard-coded `#fff` color. You fix it.
+5. **You:** `/docs update CHANGELOG`. Gemini writes the entry.
+6. **You:** `/ship`. Codex runs tests, Gemini writes the commit message, Codex pushes.
+7. **Claude quota spent:** ~2% (just the initial plan and a brief `/review` reply).
+
+No terminal-switching. No manual CLI juggling. One conversation, three agents behind it.
 
 ---
 
 ### Slash commands or plain language — both work
 
-The slash commands (`/plan`, `/exec`, etc.) are just shortcuts.
-Under the hood, they load the matching file from `skills/` and pass it to the agent.
-Typing `/plan` is exactly the same as saying:
+Slash commands are just shortcuts. They load the matching file from `skills/` and hand it to the right agent. Typing `/plan` is literally the same as saying:
 
 > "I want to build X. Break it into tasks, flag the risks, give me a numbered list."
-
-**Use whichever feels natural:**
 
 | You prefer... | Just do this |
 |---|---|
 | Slash commands | `/plan`, `/exec`, `/review`, `/docs`, `/ship` |
-| Plain language | Describe what you want — the agents figure out the rest |
-| Mix | Use commands for routine stages, plain language when explaining new features |
+| Plain language | Describe what you want — Claude figures out the stage |
+| Mix | Commands for routine steps, plain language for new features |
 
-The skill files in `skills/` are just saved prompts.
-You can edit them, ignore them, or replace them entirely with your own words.
+The files in `skills/` are saved prompts. Edit them, delete them, or rewrite them in your own voice.
+
+---
+
+### Fallback — when an agent runs out of quota
+
+The real limits:
+
+- **Claude Pro:** 5h rolling session + 7-day weekly
+- **ChatGPT Plus (Codex):** 5h rolling + 7-day weekly
+- **Gemini free tier:** 1,000 requests/day
+
+If an agent hits its cap mid-workflow:
+
+1. Run `usage` — see who's empty.
+2. **Temporarily** route that stage to Claude (if Codex or Gemini is out).
+3. Revert as soon as the quota resets.
+
+Manual override only. Don't automate it — that defeats the whole cost-discipline point of frugal-harness.
 
 ---
 
