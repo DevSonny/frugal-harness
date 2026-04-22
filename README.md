@@ -73,20 +73,53 @@ npm install -g @google/gemini-cli
 
 Gemini CLI requires an API key. Add it to `~/.zshenv` so it works in all environments including Claude Code and scripts:
 
+Gemini CLI requires an API key. Add it to your shell config:
+
+<details><summary>zsh</summary>
+
 ```bash
-echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.zshenv
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.zshrc
+source ~/.zshrc
 ```
 
-Then open a new terminal and verify:
+</details>
+
+<details><summary>bash (Linux)</summary>
 
 ```bash
-gemini -p "say hi"
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+</details>
+
+<details><summary>bash (macOS)</summary>
+
+```bash
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+</details>
+
+<details><summary>fish</summary>
+
+```fish
+set -Ux GEMINI_API_KEY "your-key-here"
+```
+
+</details>
+
+Open a new terminal, then verify:
+
+```bash
+[ -n "$GEMINI_API_KEY" ] && echo 'OK' || echo 'NOT SET'
+echo "Key prefix: ${GEMINI_API_KEY:0:6}..."
+gemini -p 'say hi'   # optional — 1 free-tier request
 ```
 
 Get a free key at: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 (Free tier: 1,000 req/day — no credit card needed)
-
-> **Why `~/.zshenv` and not `~/.zshrc`?** `.zshrc` only loads in interactive terminals. Claude Code and other non-interactive environments skip it, so your key won't be found. `.zshenv` loads everywhere.
 
 ### 4. jq
 ```bash

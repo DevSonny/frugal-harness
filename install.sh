@@ -33,6 +33,28 @@ detect_jq_install_cmd() {
   echo "install jq — see https://jqlang.org/download/"
 }
 
+detect_shell() {
+  case "${SHELL:-}" in
+    */zsh)  echo "zsh" ;;
+    */bash) echo "bash" ;;
+    */fish) echo "fish" ;;
+    *)      echo "unknown" ;;
+  esac
+}
+
+rcfile_for_shell() {
+  local shell="$1"
+  case "$shell" in
+    zsh)  echo "$HOME/.zshrc" ;;
+    bash)
+      if [[ "${OSTYPE:-}" == darwin* ]]; then echo "$HOME/.bash_profile"
+      else echo "$HOME/.bashrc"
+      fi ;;
+    fish) echo "$HOME/.config/fish/config.fish" ;;
+    *)    echo "" ;;
+  esac
+}
+
 echo "🪙 frugal-harness installer"
 echo ""
 
@@ -116,7 +138,14 @@ done
 ln -sf "$SCRIPTS_DIR/usage.sh" "$BIN_DIR/usage"
 echo "  ✓ usage scripts → $SCRIPTS_DIR"
 if ! echo "$PATH" | grep -q "$BIN_DIR"; then
-  echo "    ⚠ Add to ~/.zshenv: export PATH=\"\$HOME/.local/bin:\$PATH\""
+  _rc="$(rcfile_for_shell "$(detect_shell)")"; _sh="$(detect_shell)"
+  if [ "$_sh" = "fish" ]; then
+    echo "    ⚠ Run: fish_add_path $HOME/.local/bin"
+  elif [ -n "$_rc" ]; then
+    echo "    ⚠ Add to $_rc: export PATH=\"\$HOME/.local/bin:\$PATH\""
+  else
+    echo "    ⚠ Add to your shell rc: export PATH=\"\$HOME/.local/bin:\$PATH\""
+  fi
 fi
 
 # Configure Claude Code statusline
@@ -149,12 +178,43 @@ echo "  ✓ Gemini default model: gemini-2.5-flash-lite"
 echo "✅ frugal-harness installed!"
 echo ""
 echo "🔑 API Key Setup (do this manually):"
-echo "   Add to ~/.zshenv (not .zshrc — works in all shells including Claude Code):"
-echo ""
-echo "   echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.zshenv"
-echo ""
-echo "   Then open a new terminal."
 echo "   Get your key: https://aistudio.google.com/apikey"
+echo ""
+_detected_shell="$(detect_shell)"
+_detected_rc="$(rcfile_for_shell "$_detected_shell")"
+case "$_detected_shell" in
+  zsh)
+    echo "   Detected: zsh"
+    echo "   echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> $_detected_rc"
+    echo "   source $_detected_rc"
+    ;;
+  bash)
+    echo "   Detected: bash"
+    echo "   echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> $_detected_rc"
+    echo "   source $_detected_rc"
+    ;;
+  fish)
+    echo "   Detected: fish"
+    echo "   set -Ux GEMINI_API_KEY \"your_api_key_here\""
+    ;;
+  *)
+    echo "   Could not detect shell (SHELL=${SHELL:-unset}). Choose your config file:"
+    echo ""
+    echo "   zsh:"
+    echo "     echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.zshrc && source ~/.zshrc"
+    echo "   bash (Linux):"
+    echo "     echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.bashrc && source ~/.bashrc"
+    echo "   bash (macOS):"
+    echo "     echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.bash_profile && source ~/.bash_profile"
+    echo "   fish:"
+    echo "     set -Ux GEMINI_API_KEY \"your_api_key_here\""
+    ;;
+esac
+echo ""
+echo "   Open a new terminal, then verify:"
+echo "     1) [ -n \"\$GEMINI_API_KEY\" ] && echo 'OK: env var set' || echo 'FAIL: not set'"
+echo "     2) echo \"Key prefix: \${GEMINI_API_KEY:0:6}...\""
+echo "     3) gemini -p 'say hi'   # optional — uses 1 free-tier request"
 echo ""
 echo "Agents:"
 echo "  /plan    → Claude Code (Opus)"

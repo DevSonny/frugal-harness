@@ -68,22 +68,53 @@ codex login
 npm install -g @google/gemini-cli
 ```
 
-Gemini CLI는 API 키 방식으로 인증해야 합니다. Claude Code 등 비대화형 환경에서도 동작하려면 `~/.zshenv`에 추가하세요:
+Gemini CLI는 API 키가 필요합니다. 셸 설정 파일에 추가하세요:
+
+<details><summary>zsh</summary>
 
 ```bash
-echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.zshenv
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.zshrc
+source ~/.zshrc
 ```
+
+</details>
+
+<details><summary>bash (Linux)</summary>
+
+```bash
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.bashrc
+source ~/.bashrc
+```
+
+</details>
+
+<details><summary>bash (macOS)</summary>
+
+```bash
+echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.bash_profile
+source ~/.bash_profile
+```
+
+</details>
+
+<details><summary>fish</summary>
+
+```fish
+set -Ux GEMINI_API_KEY "your-key-here"
+```
+
+</details>
 
 새 터미널을 열고 확인:
 
 ```bash
-gemini -p "say hi"
+[ -n "$GEMINI_API_KEY" ] && echo 'OK' || echo 'NOT SET'
+echo "Key prefix: ${GEMINI_API_KEY:0:6}..."
+gemini -p 'say hi'   # optional — 1 free-tier request
 ```
 
 무료 키 발급: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
 (무료 티어: 1,000 req/일 — 신용카드 불필요)
-
-> **왜 `~/.zshrc`가 아닌 `~/.zshenv`인가?** `.zshrc`는 대화형 터미널에서만 로드됩니다. Claude Code 같은 비대화형 환경에서는 무시되어 키가 없는 것처럼 동작합니다. `.zshenv`는 모든 환경에서 로드됩니다.
 
 ### 4. jq
 ```bash
