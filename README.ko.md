@@ -9,7 +9,7 @@
 frugal-harness는 **Claude Pro ($20/월)** 와 **ChatGPT Plus ($20/월)** 를 쓰는 분들을 위해 만들었습니다.
 문서 작업은 Gemini CLI가 무료로 전담합니다.
 
-YC CEO Garry Tan이 만든 **[gstack](https://github.com/garrytan/gstack)** 과
+**[gstack](https://github.com/garrytan/gstack)** 과
 **[oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)** 에서
 핵심만 가져와서, 진짜 필요한 것만 남겼습니다.
 
@@ -145,11 +145,21 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 `/model` 수동 설정 불필요. 세 가지 모두 자동 구성됩니다.
 기존 설정 파일이 있으면 덮어쓰기 전에 자동으로 백업합니다.
 
+> **자동 고정이 적용되지 않은 경우 (기존 설정 파일 충돌, 설치 도중 실패 등) 아래처럼 직접 지정하세요.**
+>
+> - **Claude Code** — 세션 안에서: `/model claude-opus-4-7`
+>   또는 `~/.claude/settings.json` 에 `"model": "claude-opus-4-7"` 을 추가·교체.
+> - **Codex CLI** — `~/.codex/config.toml` 최상단에 `model = "gpt-5.4"` 추가·교체.
+>   한 번만 쓰려면: `codex --model gpt-5.4 ...`
+> - **Gemini CLI** — `~/.gemini/settings.json` 을 `{"model": {"name": "gemini-2.5-flash-lite"}}` 로 설정.
+>   한 번만 쓰려면: `gemini --model gemini-2.5-flash-lite -p "..."`
+
 ---
 
 ## 사용량 대시보드
 
-언제든 `usage`를 실행하면 세 CLI의 잔여 사용량을 한눈에 볼 수 있습니다:
+언제든 `usage`를 실행하면 세 CLI의 잔여 사용량을 한눈에 볼 수 있습니다.
+Claude Code 세션 안에서 실행할 땐 `! usage` 처럼 `!` 를 붙여 주세요. `!` 를 붙이면 명령이 셸에서 바로 실행돼서 Claude 가 출력을 요약하거나 잘라내지 않고 전체 결과가 그대로 보입니다.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -283,7 +293,7 @@ Claude가 `CLAUDE.md`의 규칙을 읽고, 지금 어느 단계인지 판단한 
 
 **결과:** `origin`에 깔끔한 커밋 푸시.
 
-**왜 이렇게 나눴나:** Gemini는 글을 싸고 잘 쓰고, Codex는 이미 셸 접근 + 테스트 실행 능력이 있습니다. Claude는 이 단계에 끼지 않습니다.
+**왜 이렇게 나눴나:** Gemini는 글을 저렴하게 잘 쓰고, Codex는 이미 셸 접근과 테스트 실행 능력을 갖추고 있습니다. Claude는 이 단계에 끼지 않습니다.
 
 ---
 
@@ -333,7 +343,7 @@ Claude가 `CLAUDE.md`의 규칙을 읽고, 지금 어느 단계인지 판단한 
 2. 그 단계를 **임시로** Claude에 넘김 (Codex나 Gemini가 소진된 경우).
 3. 쿼터가 리셋되자마자 원래 에이전트로 복구.
 
-수동 전환만. 자동화하지 마세요 — 그러면 frugal-harness의 비용 원칙 자체가 무너집니다.
+전환은 반드시 **수동으로만** 하세요. 자동 폴백을 만들어 두는 순간 frugal-harness 가 지향하는 비용 절감 원칙이 무너집니다.
 
 ---
 
@@ -342,6 +352,6 @@ Claude가 `CLAUDE.md`의 규칙을 읽고, 지금 어느 단계인지 판단한 
 $100짜리 요금제가 나쁜 건 아닙니다. 근데 모두에게 필요한 건 아닙니다.
 
 Claude Pro와 ChatGPT Plus는 각각 $20/월입니다.
-Gemini CLI는 무료입니다.
+Gemini CLI 는 하루 1,000회까지 무료로 쓸 수 있습니다.
 워크플로우만 잘 짜면 월 $40으로 충분히 멀리 갈 수 있습니다.
 frugal-harness가 그 워크플로우입니다.

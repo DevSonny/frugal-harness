@@ -12,7 +12,7 @@ who want a real multi-agent workflow — without the $100+ price tag.
 Gemini CLI handles all the documentation for free.
 
 It takes the best ideas from two great projects —
-**[gstack](https://github.com/garrytan/gstack)** by Garry Tan (YC CEO)
+**[gstack](https://github.com/garrytan/gstack)**
 and **[oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)** —
 and strips them down to what actually matters.
 
@@ -151,11 +151,21 @@ The installer also:
 No `/model` commands needed. All three are configured automatically.
 Backs up any existing config before overwriting.
 
+> **If auto-pinning didn't apply (e.g. a pre-existing config, or the installer failed partway), set the models manually:**
+>
+> - **Claude Code** — in a session: `/model claude-opus-4-7`
+>   Or edit `~/.claude/settings.json` and add/replace `"model": "claude-opus-4-7"`.
+> - **Codex CLI** — edit `~/.codex/config.toml` and put `model = "gpt-5.4"` at the top.
+>   Per-run: `codex --model gpt-5.4 ...`
+> - **Gemini CLI** — edit `~/.gemini/settings.json` to contain `{"model": {"name": "gemini-2.5-flash-lite"}}`.
+>   Per-run: `gemini --model gemini-2.5-flash-lite -p "..."`
+
 ---
 
 ## Usage dashboard
 
-Run `usage` anytime to see remaining quota across all three CLIs:
+Run `usage` anytime to see remaining quota across all three CLIs.
+Inside a Claude Code session, prefix it with `!` (e.g. `! usage`) — the `!` runs the command directly in your shell so the full output lands in the conversation without Claude truncating it.
 
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -348,6 +358,6 @@ Manual override only. Don't automate it — that defeats the whole cost-discipli
 $100/mo plans are great. But not everyone needs them.
 
 Claude Pro and ChatGPT Plus are $20/mo each.
-Gemini CLI is free.
+Gemini CLI is free up to 1,000 requests/day.
 With the right workflow, $40/mo gets you surprisingly far.
 frugal-harness is that workflow.

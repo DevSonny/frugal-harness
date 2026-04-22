@@ -85,7 +85,7 @@ printf '\n'
 ROLLOUT=$(ls -1t "$HOME"/.codex/sessions/*/*/*/rollout-*.jsonl 2>/dev/null | head -1 || true)
 
 if [[ -n "$ROLLOUT" ]] && command -v jq >/dev/null 2>&1; then
-  snap_ts=$(date -r "$ROLLOUT" +%s 2>/dev/null || echo 0)
+  snap_ts=$(stat -c %Y "$ROLLOUT" 2>/dev/null || stat -f %m "$ROLLOUT" 2>/dev/null || echo 0)
   snap_age=$(( $(date +%s) - snap_ts ))
   snap_min=$(( snap_age / 60 ))
 
