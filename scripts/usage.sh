@@ -85,7 +85,8 @@ printf '\n'
 ROLLOUT=$(ls -1t "$HOME"/.codex/sessions/*/*/*/rollout-*.jsonl 2>/dev/null | head -1 || true)
 
 if [[ -n "$ROLLOUT" ]] && command -v jq >/dev/null 2>&1; then
-  snap_age=$(( $(date +%s) - $(stat -f %m "$ROLLOUT" 2>/dev/null || stat -c %Y "$ROLLOUT" 2>/dev/null || echo 0) ))
+  snap_ts=$(date -r "$ROLLOUT" +%s 2>/dev/null || echo 0)
+  snap_age=$(( $(date +%s) - snap_ts ))
   snap_min=$(( snap_age / 60 ))
 
   rl=$(grep '"type":"token_count"' "$ROLLOUT" 2>/dev/null | tail -1 | \
@@ -122,7 +123,8 @@ fi
 # ── Gemini CLI ──────────────────────────────────────────────────
 printf '\n'
 gm_calls=0 gm_today=0 gm_in=0 gm_out=0 gm_cached=0
-gm_today_in=0 gm_today_out=0 gm_model="gemini-2.5-flash-lite"
+gm_today_in=0 gm_today_out=0
+gm_model=$(jq -r '.model.name // "gemini-2.5-flash-lite"' "$HOME/.gemini/settings.json" 2>/dev/null || echo "gemini-2.5-flash-lite")
 
 GEMINI_DIR="$HOME/.gemini/tmp"
 if command -v jq >/dev/null 2>&1 && [[ -d "$GEMINI_DIR" ]]; then
@@ -133,7 +135,7 @@ if command -v jq >/dev/null 2>&1 && [[ -d "$GEMINI_DIR" ]]; then
       (( gm_in    += in_t )) || true
       (( gm_out   += out_t)) || true
       (( gm_cached+= cach )) || true
-      [[ -n "$m" ]] && gm_model="$m"
+      true
       if [[ "$fdate" == "$TODAY" ]]; then
         (( gm_today++         )) || true
         (( gm_today_in += in_t)) || true
