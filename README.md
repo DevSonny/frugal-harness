@@ -3,8 +3,6 @@
 # frugal-harness
 
 <p align="center">
-  <img src="generated-image.jpg" width="160" />
-  <br/>
   <strong>DevSonny</strong> — A developer who loves FC Seoul ⚽
 </p>
 
