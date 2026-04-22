@@ -1,6 +1,38 @@
 #!/bin/bash
 set -e
 
+detect_jq_install_cmd() {
+  local id_all
+
+  if [ "$(uname -s)" = "Darwin" ]; then
+    echo "brew install jq"
+    return
+  fi
+
+  if [ -r /etc/os-release ]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    id_all=" ${ID:-} ${ID_LIKE:-} "
+
+    if [[ "$id_all" == *" debian "* ]] || [[ "$id_all" == *" ubuntu "* ]]; then
+      echo "sudo apt install jq"
+      return
+    fi
+
+    if [[ "$id_all" == *" fedora "* ]] || [[ "$id_all" == *" rhel "* ]] || [[ "$id_all" == *" centos "* ]]; then
+      echo "sudo dnf install jq"
+      return
+    fi
+
+    if [[ "$id_all" == *" arch "* ]]; then
+      echo "sudo pacman -S jq"
+      return
+    fi
+  fi
+
+  echo "install jq — see https://jqlang.org/download/"
+}
+
 echo "🪙 frugal-harness installer"
 echo ""
 
@@ -31,7 +63,7 @@ else
 fi
 
 if ! command -v jq &> /dev/null; then
-  echo "  ✗ jq not found        → brew install jq"
+  echo "  ✗ jq not found        → $(detect_jq_install_cmd)"
   MISSING=1
 else
   echo "  ✓ jq"
