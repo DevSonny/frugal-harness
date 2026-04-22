@@ -20,14 +20,16 @@ and strips them down to what actually matters.
 
 ## The three-agent lineup
 
-| Agent | Plan | Role |
-|---|---|---|
-| **Claude Code** (Opus) | Claude Pro $20/mo | **Planning only** — architecture & task breakdown |
-| **Codex CLI** | ChatGPT Plus $20/mo | Build, review, commit & push |
-| **Gemini CLI** | Free (1,000 req/day) | All docs — README, changelogs, comments, commit messages |
+| Agent | Plan | Model | Role |
+|---|---|---|---|
+| **Claude Code** | Claude Pro $20/mo | `claude-opus-4-7` | **Planning only** — architecture & task breakdown |
+| **Codex CLI** | ChatGPT Plus $20/mo | `gpt-5.4` | Build, review, commit & push |
+| **Gemini CLI** | Free (1,000 req/day) | `gemini-2.5-flash-lite` | All docs — README, changelogs, comments, commit messages |
 
 **Total: $40/mo.** No $100 plan needed.
 Fallback: if Codex or Gemini hits its quota, Claude covers that role temporarily.
+
+All three models are pinned automatically at install time — no manual `/model` setup needed.
 
 ---
 
@@ -140,10 +142,13 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 ```
 
 The installer also:
+- Pins Claude Code model to `claude-opus-4-7` — Opus, for planning
+- Pins Codex default model to `gpt-5.4` — latest coding model
+- Pins Gemini default model to `gemini-2.5-flash-lite` — cheapest, for docs
 - Sets up the `usage` command for a combined usage report
 - Configures the Claude Code statusline with live Claude / Codex / Gemini usage
-- Pins Gemini's default model to `gemini-2.5-flash-lite` (cheapest)
 
+No `/model` commands needed. All three are configured automatically.
 Backs up any existing config before overwriting.
 
 ---

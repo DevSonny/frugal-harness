@@ -155,13 +155,31 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
   cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
   tmp=$(mktemp)
   jq --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
-     '.statusLine = {type: "command", command: $cmd}' \
+     '.statusLine = {type: "command", command: $cmd} | .model = "claude-opus-4-7"' \
      "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
 else
   jq -n --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
-     '{statusLine: {type: "command", command: $cmd}}' > "$CLAUDE_SETTINGS"
+     '{statusLine: {type: "command", command: $cmd}, model: "claude-opus-4-7"}' > "$CLAUDE_SETTINGS"
 fi
-echo "  ✓ Claude Code statusline configured"
+echo "  ✓ Claude Code model: claude-opus-4-7 (Opus)"
+
+# Pin Codex default model to gpt-5.4
+CODEX_CONFIG="$HOME/.codex/config.toml"
+mkdir -p "$HOME/.codex"
+if [ -f "$CODEX_CONFIG" ]; then
+  cp "$CODEX_CONFIG" "${CODEX_CONFIG}${BACKUP_SUFFIX}"
+  if grep -q '^model = ' "$CODEX_CONFIG"; then
+    sed -i 's/^model = .*/model = "gpt-5.4"/' "$CODEX_CONFIG"
+  else
+    tmp=$(mktemp)
+    printf 'model = "gpt-5.4"\n\n' > "$tmp"
+    cat "$CODEX_CONFIG" >> "$tmp"
+    mv "$tmp" "$CODEX_CONFIG"
+  fi
+else
+  printf 'model = "gpt-5.4"\n' > "$CODEX_CONFIG"
+fi
+echo "  ✓ Codex default model: gpt-5.4"
 
 # Pin Gemini default model to gemini-2.5-flash-lite (cheapest)
 GEMINI_SETTINGS="$HOME/.gemini/settings.json"
@@ -216,12 +234,12 @@ echo "     1) [ -n \"\$GEMINI_API_KEY\" ] && echo 'OK: env var set' || echo 'FAI
 echo "     2) echo \"Key prefix: \${GEMINI_API_KEY:0:6}...\""
 echo "     3) gemini -p 'say hi'   # optional — uses 1 free-tier request"
 echo ""
-echo "Agents:"
-echo "  /plan    → Claude Code (Opus)"
-echo "  /exec    → Codex CLI"
-echo "  /docs    → Gemini CLI (free)"
-echo "  /review  → Claude Code"
-echo "  /ship    → Claude Code"
+echo "Agents & models:"
+echo "  /plan    → Claude Code  claude-opus-4-7      (Opus — planning only)"
+echo "  /exec    → Codex CLI    gpt-5.4              (build)"
+echo "  /review  → Codex CLI    gpt-5.4              (review)"
+echo "  /docs    → Gemini CLI   gemini-2.5-flash-lite (free — docs)"
+echo "  /ship    → Codex CLI    gpt-5.4              (commit & push)"
 echo ""
 echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
 echo "Gemini CLI: free"

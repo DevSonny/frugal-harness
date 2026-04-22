@@ -17,14 +17,16 @@ YC CEO Garry Tan이 만든 **[gstack](https://github.com/garrytan/gstack)** 과
 
 ## 3-에이전트 구성
 
-| 에이전트 | 요금제 | 역할 |
-|---|---|---|
-| **Claude Code** (Opus) | Claude Pro $20/월 | **계획 전용** — 아키텍처, 태스크 분해 |
-| **Codex CLI** | ChatGPT Plus $20/월 | 구현, 리뷰, 커밋 & 푸시 |
-| **Gemini CLI** | 무료 (1,000 req/일) | 문서 전담 — README, 변경 로그, 주석, 커밋 메시지 |
+| 에이전트 | 요금제 | 모델 | 역할 |
+|---|---|---|---|
+| **Claude Code** | Claude Pro $20/월 | `claude-opus-4-7` | **계획 전용** — 아키텍처, 태스크 분해 |
+| **Codex CLI** | ChatGPT Plus $20/월 | `gpt-5.4` | 구현, 리뷰, 커밋 & 푸시 |
+| **Gemini CLI** | 무료 (1,000 req/일) | `gemini-2.5-flash-lite` | 문서 전담 — README, 변경 로그, 주석, 커밋 메시지 |
 
 **합계: 월 $40** — $100짜리 요금제 필요 없습니다.
 Fallback: Codex나 Gemini 할당량이 소진되면 Claude가 임시 대체합니다.
+
+세 모델 모두 설치 시 자동 고정됩니다 — `/model` 수동 설정 불필요.
 
 ---
 
@@ -134,10 +136,13 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 ```
 
 설치 시 자동으로:
+- Claude Code 모델을 `claude-opus-4-7`로 고정 — Opus, 계획 전용
+- Codex 기본 모델을 `gpt-5.4`로 고정 — 최신 코딩 모델
+- Gemini 기본 모델을 `gemini-2.5-flash-lite`로 고정 — 가장 저렴, 문서 전용
 - `usage` 커맨드 설치 (세 CLI 통합 사용량 리포트)
 - Claude Code 상태 표시줄에 실시간 사용량 설정
-- Gemini 기본 모델을 `gemini-2.5-flash-lite` (가장 저렴)으로 고정
 
+`/model` 수동 설정 불필요. 세 가지 모두 자동 구성됩니다.
 기존 설정 파일이 있으면 덮어쓰기 전에 자동으로 백업합니다.
 
 ---
