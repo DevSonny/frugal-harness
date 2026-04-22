@@ -16,7 +16,8 @@ claude_window_stats() {
     while IFS=$'\t' read -r ts it ot cr cw; do
       [ -z "$ts" ] && continue
       ts_clean="${ts%.*}"
-      epoch=$(date -j -u -f '%Y-%m-%dT%H:%M:%S' "$ts_clean" '+%s' 2>/dev/null) || continue
+      epoch=$(date -j -u -f '%Y-%m-%dT%H:%M:%S' "$ts_clean" '+%s' 2>/dev/null \
+           || date -u -d "$ts_clean" '+%s' 2>/dev/null) || continue
       (( epoch < cutoff_7d )) && continue
       (( w_msgs++ )) || true
       (( w_in  += it + cr + cw )) || true
