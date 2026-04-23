@@ -156,14 +156,14 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
   tmp=$(mktemp)
   jq --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
      --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
-     '.statusLine = {type: "command", command: $cmd} | .model = "claude-opus-4-7" | .hooks.PreToolUse = [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]' \
+     '.statusLine = {type: "command", command: $cmd} | .model = "opusplan" | .hooks.PreToolUse = [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]' \
      "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
 else
   jq -n --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
      --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
-     '{statusLine: {type: "command", command: $cmd}, model: "claude-opus-4-7", hooks: {PreToolUse: [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]}}' > "$CLAUDE_SETTINGS"
+     '{statusLine: {type: "command", command: $cmd}, model: "opusplan", hooks: {PreToolUse: [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]}}' > "$CLAUDE_SETTINGS"
 fi
-echo "  ✓ Claude Code model: claude-opus-4-7 (Opus)"
+echo "  ✓ Claude Code model: opusplan (Opus for plan mode, Sonnet elsewhere)"
 echo "  ✓ PreToolUse hook installed: guard-code-edit.sh"
 
 # Pin Codex default model to gpt-5.4
@@ -238,7 +238,7 @@ echo "     2) echo \"Key prefix: \${GEMINI_API_KEY:0:6}...\""
 echo "     3) gemini -p 'say hi'   # optional — uses 1 free-tier request"
 echo ""
 echo "Agents & models:"
-echo "  /plan    → Claude Code  claude-opus-4-7      (Opus — planning only)"
+echo "  /plan    → Claude Code  opusplan             (Opus plan mode, Sonnet elsewhere)"
 echo "  /exec    → Codex CLI    gpt-5.4              (build)"
 echo "  /review  → Codex CLI    gpt-5.4              (review)"
 echo "  /docs    → Gemini CLI   gemini-2.5-flash-lite (free — docs)"

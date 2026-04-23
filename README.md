@@ -28,7 +28,7 @@ and strips them down to what actually matters.
 
 | Agent | Plan | Model | Role |
 |---|---|---|---|
-| **Claude Code** | Claude Pro $20/mo | `claude-opus-4-7` | **Planning only** — architecture & task breakdown |
+| **Claude Code** | Claude Pro $20/mo | `opusplan` | **Planning (Opus)** + orchestration (Sonnet) |
 | **Codex CLI** | ChatGPT Plus $20/mo | `gpt-5.4` | Build, review, commit & push |
 | **Gemini CLI** | Free (1,000 req/day) | `gemini-2.5-flash-lite` | All docs — README, changelogs, comments, commit messages |
 
@@ -36,6 +36,7 @@ and strips them down to what actually matters.
 Fallback: if Codex or Gemini hits its quota, Claude covers that role temporarily.
 
 All three models are pinned automatically at install time — no manual `/model` setup needed.
+Claude Code is set to `opusplan` by default: Opus kicks in only when you enter plan mode, Sonnet handles everything else. The PreToolUse hook (below) ensures Sonnet delegates all code changes to Codex, so the Claude session quota is only used for planning + orchestration.
 
 ---
 
@@ -148,7 +149,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 ```
 
 The installer also:
-- Pins Claude Code model to `claude-opus-4-7` — Opus, for planning
+- Pins Claude Code to `opusplan` — Opus only in plan mode, Sonnet for orchestration
 - Pins Codex default model to `gpt-5.4` — latest coding model
 - Pins Gemini default model to `gemini-2.5-flash-lite` — cheapest, for docs
 - Sets up the `usage` command for a combined usage report
@@ -160,8 +161,8 @@ Backs up any existing config before overwriting.
 
 > **If auto-pinning didn't apply (e.g. a pre-existing config, or the installer failed partway), set the models manually:**
 >
-> - **Claude Code** — in a session: `/model claude-opus-4-7`
->   Or edit `~/.claude/settings.json` and add/replace `"model": "claude-opus-4-7"`.
+> - **Claude Code** — in a session: `/model opusplan`
+>   Or edit `~/.claude/settings.json` and add/replace `"model": "opusplan"`.
 > - **Codex CLI** — edit `~/.codex/config.toml` and put `model = "gpt-5.4"` at the top.
 >   Per-run: `codex --model gpt-5.4 ...`
 > - **Gemini CLI** — edit `~/.gemini/settings.json` to contain `{"model": {"name": "gemini-2.5-flash-lite"}}`.
@@ -170,6 +171,8 @@ Backs up any existing config before overwriting.
 ---
 
 ## Enforced role separation (no cheating)
+
+Sonnet works fine for most tasks, but for large or complex work where you want fewer iterations and trial-and-error, using Opus in plan mode (`opusplan`) is recommended.
 
 The whole point of frugal-harness is that **Claude never writes code** — Opus plans, Codex builds, Gemini docs. But when you're on `opusplan` (Opus for plan mode, Sonnet for everything else), Sonnet tends to ignore the rule and burn your Claude session quota implementing things directly.
 
