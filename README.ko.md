@@ -147,6 +147,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 - Gemini 기본 모델을 `gemini-2.5-flash-lite`로 고정 — 가장 저렴, 문서 전용
 - `usage` 커맨드 설치 (세 CLI 통합 사용량 리포트)
 - Claude Code 상태 표시줄에 실시간 사용량 설정
+- **PreToolUse 훅** (`guard-code-edit.sh`) 설치 — Claude 가 소스 코드를 직접 편집하지 못하게 막고 Codex 에 강제 위임
 
 `/model` 수동 설정 불필요. 세 가지 모두 자동 구성됩니다.
 기존 설정 파일이 있으면 덮어쓰기 전에 자동으로 백업합니다.
@@ -159,6 +160,20 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 >   한 번만 쓰려면: `codex --model gpt-5.4 ...`
 > - **Gemini CLI** — `~/.gemini/settings.json` 을 `{"model": {"name": "gemini-2.5-flash-lite"}}` 로 설정.
 >   한 번만 쓰려면: `gemini --model gemini-2.5-flash-lite -p "..."`
+
+---
+
+## 역할 분리 강제 (편법 차단)
+
+frugal-harness 의 핵심 철학은 **Claude 는 코드를 직접 쓰지 않는다** 는 것입니다 — Opus 는 계획, Codex 는 구현, Gemini 는 문서. 그런데 `opusplan` 설정을 쓰면 (Plan 모드만 Opus, 나머지는 Sonnet) Sonnet 이 이 규칙을 자주 무시하고 직접 코드를 편집해서 Claude 세션 쿼터만 빠르게 태우는 일이 생깁니다.
+
+그래서 frugal-harness 는 `~/.claude/settings.json` 에 **PreToolUse 훅**을 심어서 `Edit` / `Write` / `NotebookEdit` 호출 전에 먼저 검사합니다. 대상 파일이 소스 코드 (`.ts .tsx .js .jsx .py .sh .go .rs .java .c .cpp .sql ...`)면 훅이 `exit 2` 로 호출을 차단하고 "Codex 에 위임하세요" 라는 stderr 메시지를 보냅니다. Claude 는 이 메시지를 에러 컨텍스트로 받아서, 다음 턴에 자동으로 `codex exec` 경로를 탑니다.
+
+문서·설정 파일 (`.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore) 은 통과시키므로 README 직접 수정 같은 건 그대로 됩니다.
+
+효과: Claude 세션 쿼터가 병목이 되는 일이 사라지고, Codex 주간 쿼터가 제대로 쓰이기 시작하며, "계획 vs 구현" 분리가 Sonnet 에서도 강제됩니다.
+
+스크립트: [`scripts/guard-code-edit.sh`](./scripts/guard-code-edit.sh). 필요에 따라 확장자 목록은 편집해서 쓰세요 (예: `.lua`, `.nix` 추가).
 
 ---
 

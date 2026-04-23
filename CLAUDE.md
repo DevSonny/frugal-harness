@@ -32,6 +32,13 @@
 - When running `codex exec`, always pass along the file path, tech stack, and completion criteria
 - Don't write code during the planning phase — implement only via `codex exec` after the plan is confirmed
 
+## Model-agnostic enforcement (CRITICAL)
+These rules apply **regardless of active Claude model** (Opus, Sonnet, Haiku).
+- Do **not** use Edit/Write/NotebookEdit on source-code files. A PreToolUse hook (`guard-code-edit.sh`) blocks this with `exit 2`.
+- Blocked extensions: `.ts .tsx .js .jsx .mjs .cjs .py .rb .php .go .rs .java .kt .swift .c .h .cpp .hpp .sh .bash .zsh .sql`
+- Allowed direct edits: `.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore, plan files.
+- When the hook blocks you, read stderr and immediately run `codex exec "..."` with file path + tech stack + completion criteria. Do not retry Edit/Write on the same file.
+
 ## Workflow Order
 New features must follow this order: `/plan` (Claude) → `/exec` (Codex) → `/review` (Codex) → `/docs` (Gemini) → `/ship` (Codex)
 

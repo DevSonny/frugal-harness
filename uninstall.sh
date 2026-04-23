@@ -50,6 +50,27 @@ if [ -d "$SKILLS_DIR" ] && [ -z "$(ls -A "$SKILLS_DIR")" ]; then
   echo "  ✓ Removed empty skills/ directory"
 fi
 
+# Remove usage scripts and symlink
+SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
+BIN_DIR="$HOME/.local/bin"
+if [ -d "$SCRIPTS_DIR" ]; then
+  rm -rf "$SCRIPTS_DIR"
+  echo "  ↩ Removed $SCRIPTS_DIR"
+fi
+if [ -L "$BIN_DIR/usage" ] || [ -f "$BIN_DIR/usage" ]; then
+  rm -f "$BIN_DIR/usage"
+  echo "  ↩ Removed $BIN_DIR/usage"
+fi
+
+# Remove PreToolUse hook from Claude settings
+CLAUDE_SETTINGS="$HOME/.claude/settings.json"
+if [ -f "$CLAUDE_SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+  cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
+  tmp=$(mktemp)
+  jq "del(.hooks.PreToolUse)" "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
+  echo "  ↩ Removed PreToolUse hook from $CLAUDE_SETTINGS"
+fi
+
 echo ""
 echo "✅ frugal-harness uninstalled!"
 echo "   Backups saved with suffix: ${BACKUP_SUFFIX}"

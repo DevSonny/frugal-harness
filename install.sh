@@ -131,7 +131,7 @@ done
 SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
-for s in usage.sh usage-statusline.sh lib-claude-window.sh; do
+for s in usage.sh usage-statusline.sh lib-claude-window.sh guard-code-edit.sh; do
   curl -fsSL "$REPO_RAW/scripts/$s" -o "$SCRIPTS_DIR/$s"
   chmod +x "$SCRIPTS_DIR/$s"
 done
@@ -155,13 +155,16 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
   cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
   tmp=$(mktemp)
   jq --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
-     '.statusLine = {type: "command", command: $cmd} | .model = "claude-opus-4-7"' \
+     --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
+     '.statusLine = {type: "command", command: $cmd} | .model = "claude-opus-4-7" | .hooks.PreToolUse = [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]' \
      "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
 else
   jq -n --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
-     '{statusLine: {type: "command", command: $cmd}, model: "claude-opus-4-7"}' > "$CLAUDE_SETTINGS"
+     --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
+     '{statusLine: {type: "command", command: $cmd}, model: "claude-opus-4-7", hooks: {PreToolUse: [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]}}' > "$CLAUDE_SETTINGS"
 fi
 echo "  ✓ Claude Code model: claude-opus-4-7 (Opus)"
+echo "  ✓ PreToolUse hook installed: guard-code-edit.sh"
 
 # Pin Codex default model to gpt-5.4
 CODEX_CONFIG="$HOME/.codex/config.toml"

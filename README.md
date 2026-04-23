@@ -153,6 +153,7 @@ The installer also:
 - Pins Gemini default model to `gemini-2.5-flash-lite` — cheapest, for docs
 - Sets up the `usage` command for a combined usage report
 - Configures the Claude Code statusline with live Claude / Codex / Gemini usage
+- Installs a **PreToolUse hook** (`guard-code-edit.sh`) that blocks Claude from editing source code directly — forces delegation to Codex
 
 No `/model` commands needed. All three are configured automatically.
 Backs up any existing config before overwriting.
@@ -165,6 +166,20 @@ Backs up any existing config before overwriting.
 >   Per-run: `codex --model gpt-5.4 ...`
 > - **Gemini CLI** — edit `~/.gemini/settings.json` to contain `{"model": {"name": "gemini-2.5-flash-lite"}}`.
 >   Per-run: `gemini --model gemini-2.5-flash-lite -p "..."`
+
+---
+
+## Enforced role separation (no cheating)
+
+The whole point of frugal-harness is that **Claude never writes code** — Opus plans, Codex builds, Gemini docs. But when you're on `opusplan` (Opus for plan mode, Sonnet for everything else), Sonnet tends to ignore the rule and burn your Claude session quota implementing things directly.
+
+So frugal-harness installs a **PreToolUse hook** in `~/.claude/settings.json` that runs before every `Edit` / `Write` / `NotebookEdit` call. If the target is a source-code file (`.ts .tsx .js .jsx .py .sh .go .rs .java .c .cpp .sql ...`), the hook returns `exit 2` with a message telling Claude to delegate to `codex exec` instead. Claude sees the stderr as an error and automatically switches to Codex on the next turn.
+
+Docs and configs (`.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore) pass through untouched — you can still edit README directly.
+
+Result: Claude session quota stops being the bottleneck, Codex weekly quota actually gets used, and the "plan vs build" separation holds even on Sonnet.
+
+Script: [`scripts/guard-code-edit.sh`](./scripts/guard-code-edit.sh). Edit the extension list if your stack needs it (e.g. add `.lua` or `.nix`).
 
 ---
 
