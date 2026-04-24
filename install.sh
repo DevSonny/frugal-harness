@@ -196,7 +196,7 @@ echo "  ✓ Slash commands registered → $COMMANDS_DIR"
 SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
-for s in usage.sh usage-statusline.sh lib-claude-window.sh guard-code-edit.sh; do
+for s in usage.sh usage-statusline.sh lib-claude-window.sh lib-cost-tracker.sh guard-code-edit.sh; do
   curl -fsSL "$REPO_RAW/scripts/$s" -o "$SCRIPTS_DIR/$s"
   chmod +x "$SCRIPTS_DIR/$s"
 done

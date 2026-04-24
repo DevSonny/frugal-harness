@@ -8,11 +8,13 @@ CLAUDE_WEEKLY_LIMIT=${CLAUDE_WEEKLY_LIMIT:-2700}
 _self="$0"; while [ -L "$_self" ]; do _self="$(readlink "$_self")"; done
 SCRIPT_DIR="$(cd "$(dirname "$_self")" && pwd)"
 source "$SCRIPT_DIR/lib-claude-window.sh"
+source "$SCRIPT_DIR/lib-cost-tracker.sh"
 
 input=$(cat)
 project_dir=$(printf '%s' "$input" | jq -r '.workspace.project_dir')
 model_name=$(printf '%s' "$input"  | jq -r '.model.display_name')
 cwd=$(printf '%s' "$input"         | jq -r '.cwd')
+transcript_path=$(printf '%s' "$input" | jq -r '.transcript_path // empty')
 
 branch=""
 if git -C "$cwd" rev-parse --git-dir >/dev/null 2>&1; then
@@ -22,6 +24,7 @@ fi
 
 CY=$'\033[36m' MG=$'\033[35m' GN=$'\033[32m'
 YL=$'\033[33m' RD=$'\033[31m' DM=$'\033[2m'  RS=$'\033[0m'
+BW=$'\033[1;37m'
 
 color_pct() {
   local p=$1
@@ -85,3 +88,30 @@ fi
 out+=$(printf '  %bGemini%b %s calls today' "$DM" "$RS" "$gm")
 
 printf '%s\n' "$out"
+
+claude_cost=$(claude_session_cost "$transcript_path")
+codex_cost=$(codex_session_cost)
+gemini_cost=$(gemini_session_cost)
+total_cost=$(awk -v c="$claude_cost" -v x="$codex_cost" -v g="$gemini_cost" '
+  BEGIN {
+    if (c == "?" || x == "?" || g == "?") {
+      print "?"
+    } else {
+      printf "%.2f\n", c + x + g
+    }
+  }')
+
+format_cost() {
+  local value="$1"
+  if [ "$value" = "?" ]; then
+    printf '?'
+  else
+    printf '$%s' "$value"
+  fi
+}
+
+printf '  Claude %b%s%b  Codex %b%s%b  Gemini %b%s%b  %bTotal %s%b\n' \
+  "$YL" "$(format_cost "$claude_cost")" "$RS" \
+  "$YL" "$(format_cost "$codex_cost")" "$RS" \
+  "$YL" "$(format_cost "$gemini_cost")" "$RS" \
+  "$BW" "$(format_cost "$total_cost")" "$RS"

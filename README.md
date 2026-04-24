@@ -99,7 +99,7 @@ The installer configures:
 - Gemini default model: `gemini-2.5-flash-lite`
 - the `usage` command
 - Claude Code slash commands under `~/.claude/commands`
-- Claude Code statusline
+- Claude Code statusline with remaining quota and current session cost
 - a PreToolUse guard that blocks Claude from editing source files directly
 - `~/.codex/AGENTS.md` for Codex standalone fallback
 

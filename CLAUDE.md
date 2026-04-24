@@ -22,6 +22,7 @@ Opus is for high-value planning only, not for direct implementation. Never switc
 - Implementation and bug fixes: `codex exec "<path + stack + done-criteria>"` via Bash.
 - Review, commit message, commit, and push: `codex exec` (Codex writes its own commit message).
 - Docs, READMEs, changelogs, and inline comments: Gemini CLI first (`gemini -p`), then Codex, then Claude only as the final fallback.
+- Web search and research: `codex exec "<research question + what to report>"` first — Codex has web search capability and preserves Claude's context budget. Claude may do a quick web lookup only when Codex is unavailable or the answer is trivially found without browsing.
 
 ## Workflow Order
 Natural language is the primary interface. Slash commands are optional shortcuts for:
