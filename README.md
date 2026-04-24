@@ -2,6 +2,12 @@
 
 # frugal-harness
 
+<p align="center">
+  <img src="https://github.com/DevSonny.png" width="120" />
+  <br/>
+  <strong>DevSonny</strong> — A developer who loves FC Seoul
+</p>
+
 frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Plus, and Gemini CLI so the whole development loop can run without a $100/mo setup.
 
 The core idea is role separation.

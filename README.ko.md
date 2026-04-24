@@ -2,6 +2,12 @@
 
 # frugal-harness
 
+<p align="center">
+  <img src="https://github.com/DevSonny.png" width="120" />
+  <br/>
+  <strong>DevSonny</strong> — FC Seoul을 사랑하는 개발자
+</p>
+
 frugal-harness는 Claude Pro, ChatGPT Plus, Gemini CLI를 조합해 비용을 아끼면서도 실제 개발 흐름을 끝까지 처리하도록 만든 하네스입니다.
 
 핵심은 역할 분리입니다.
