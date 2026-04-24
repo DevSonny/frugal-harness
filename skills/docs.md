@@ -1,4 +1,4 @@
-# /docs — Let Gemini write the words
+# /docs — Write or update documentation
 
 ## When to use
 - Writing or updating README
@@ -6,20 +6,14 @@
 - Inline code comments
 - Changelogs
 
-## Why Gemini?
-- Free tier: 1,000 req/day, 1M token context
-- Great at reading large codebases and writing coherent docs
-- Saves Claude and Codex quota for actual work
-
 ## Steps
-1. Pass the relevant files or diff to Gemini CLI
+1. Pass the relevant files or diff to Gemini CLI first
 2. Specify the doc type (README / API doc / changelog / comments)
 3. Specify the language (Korean / English / both)
-4. Review output and commit
+4. If Gemini is unavailable, fall back to Codex, then Claude
 
-## Example prompt for Gemini CLI
-"Read the following code and write a Korean + English README.
-Be casual, not formal. No translation-speak."
+## Output
+Concise documentation changes ready for review.
 
 ## Agent
-Gemini CLI (free tier)
+Gemini CLI -> Codex CLI -> Claude Code fallback

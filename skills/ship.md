@@ -4,7 +4,8 @@
 - [ ] /review passed
 - [ ] All plan tasks checked off
 - [ ] Docs updated (/docs if needed)
-- [ ] No debug logs or console.logs left
+- [ ] Relevant quality gate checks passed or skipped with explicit reasons
+- [ ] No debug logs, temporary instrumentation, or dead code left
 - [ ] Branch name and commit message are clean
 - [ ] Ready to open PR or push to main
 - [ ] Codex writes the commit message directly from the final diff

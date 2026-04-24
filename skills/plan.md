@@ -1,7 +1,7 @@
 # /plan — Think before you build
 
 ## When to use
-Before writing any code. Always.
+When a request needs task breakdown, tradeoff analysis, or approval before implementation.
 
 ## Steps
 1. Restate the goal in one sentence
@@ -16,4 +16,4 @@ Before writing any code. Always.
 - ...
 
 ## Agent
-Claude Code (Opus)
+Claude Code (Sonnet by default; Opus only for complex plans)

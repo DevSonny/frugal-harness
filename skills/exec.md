@@ -1,7 +1,7 @@
 # /exec — Build from the plan
 
 ## When to use
-After /plan is confirmed.
+After the plan or natural-language request is clear enough to implement.
 
 ## Steps
 1. Pick the first unchecked task from the plan
@@ -11,7 +11,7 @@ After /plan is confirmed.
 
 ## Rules
 - Stick to the plan. If scope changes, re-run /plan first.
-- Small commits per task
+- Keep each task and diff small. Commit during /ship unless the user asks otherwise.
 
 ## Agent
 Codex CLI

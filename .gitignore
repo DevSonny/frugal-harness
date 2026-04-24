@@ -1,2 +1,5 @@
-.claude/\n.codex\n.nvm/
+.claude/
+.codex
+.nvm/
 generated-image.jpg
+generated-image.jpg:Zone.Identifier

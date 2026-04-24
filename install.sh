@@ -55,6 +55,38 @@ rcfile_for_shell() {
   esac
 }
 
+set_toml_root_key() {
+  local file="$1"
+  local key="$2"
+  local value="$3"
+  local tmp
+
+  tmp=$(mktemp)
+  awk -v key="$key" -v value="$value" '
+    BEGIN { done = 0; in_root = 1 }
+    in_root && $1 == key && $2 == "=" {
+      if (!done) {
+        print key " = \"" value "\""
+        done = 1
+      }
+      next
+    }
+    /^\[/ {
+      if (!done) {
+        print key " = \"" value "\""
+        done = 1
+      }
+      in_root = 0
+    }
+    { print }
+    END {
+      if (!done) {
+        print key " = \"" value "\""
+      }
+    }
+  ' "$file" > "$tmp" && mv "$tmp" "$file"
+}
+
 echo "🪙 frugal-harness installer"
 echo ""
 
@@ -181,33 +213,28 @@ if [ -f "$CLAUDE_SETTINGS" ]; then
   tmp=$(mktemp)
   jq --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
      --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
-     '.statusLine = {type: "command", command: $cmd} | .model = "opusplan" | .hooks.PreToolUse = [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]' \
+     '.statusLine = {type: "command", command: $cmd} | .model = "sonnet" | .hooks.PreToolUse = [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]' \
      "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
 else
   jq -n --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
      --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
-     '{statusLine: {type: "command", command: $cmd}, model: "opusplan", hooks: {PreToolUse: [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]}}' > "$CLAUDE_SETTINGS"
+     '{statusLine: {type: "command", command: $cmd}, model: "sonnet", hooks: {PreToolUse: [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]}}' > "$CLAUDE_SETTINGS"
 fi
-echo "  ✓ Claude Code model: opusplan (Opus for plan mode, Sonnet elsewhere)"
+echo "  ✓ Claude Code model: sonnet (Opus recommended only for complex plans)"
 echo "  ✓ PreToolUse hook installed: guard-code-edit.sh"
 
-# Pin Codex default model to gpt-5.5
+# Pin Codex defaults
 CODEX_CONFIG="$HOME/.codex/config.toml"
 mkdir -p "$HOME/.codex"
 if [ -f "$CODEX_CONFIG" ]; then
   cp "$CODEX_CONFIG" "${CODEX_CONFIG}${BACKUP_SUFFIX}"
-  if grep -q '^model = ' "$CODEX_CONFIG"; then
-    sed -i 's/^model = .*/model = "gpt-5.5"/' "$CODEX_CONFIG"
-  else
-    tmp=$(mktemp)
-    printf 'model = "gpt-5.5"\n\n' > "$tmp"
-    cat "$CODEX_CONFIG" >> "$tmp"
-    mv "$tmp" "$CODEX_CONFIG"
-  fi
 else
-  printf 'model = "gpt-5.5"\n' > "$CODEX_CONFIG"
+  : > "$CODEX_CONFIG"
 fi
-echo "  ✓ Codex default model: gpt-5.5"
+set_toml_root_key "$CODEX_CONFIG" "model" "gpt-5.5"
+set_toml_root_key "$CODEX_CONFIG" "model_reasoning_effort" "medium"
+set_toml_root_key "$CODEX_CONFIG" "plan_mode_reasoning_effort" "high"
+echo "  ✓ Codex default model: gpt-5.5 (plan high, implementation medium)"
 
 # Build Codex standalone harness
 "$SYNC_SCRIPT"
@@ -267,11 +294,11 @@ echo "     2) echo \"Key prefix: \${GEMINI_API_KEY:0:6}...\""
 echo "     3) gemini -p 'say hi'   # optional — uses 1 free-tier request"
 echo ""
 echo "Agents & models:"
-echo "  /plan    → Claude Code  opusplan             (Opus plan mode, Sonnet elsewhere)"
-echo "  /exec    → Codex CLI    gpt-5.5              (build)"
-echo "  /review  → Codex CLI    gpt-5.5              (review)"
+echo "  /plan    → Claude Code  sonnet               (recommend Opus only for complex plans)"
+echo "  /exec    → Codex CLI    gpt-5.5              (build, medium effort)"
+echo "  /review  → Codex CLI    gpt-5.5              (review, medium effort)"
 echo "  /docs    → Gemini CLI   gemini-2.5-flash-lite (free — docs)"
-echo "  /ship    → Codex CLI    gpt-5.5              (commit & push)"
+echo "  /ship    → Codex CLI    gpt-5.5              (commit & push, medium effort)"
 echo ""
 echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
 echo "Gemini CLI: free"

@@ -18,9 +18,12 @@ path=$(jq -r '.tool_input.file_path // empty' 2>/dev/null)
 [ -z "$path" ] && exit 0
 
 case "$path" in
-  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|\
+  *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.vue|*.svelte|*.astro|\
+  *.css|*.scss|*.sass|*.less|\
   *.py|*.rb|*.php|\
-  *.go|*.rs|*.java|*.kt|*.swift|\
+  *.go|*.rs|*.java|*.kt|*.swift|*.dart|\
+  *.cs|*.fs|*.scala|*.ex|*.exs|\
+  *.lua|*.nix|*.r|*.R|*.jl|\
   *.c|*.h|*.cpp|*.hpp|\
   *.sh|*.bash|*.zsh|\
   *.sql)

@@ -19,16 +19,29 @@ When Claude hands off a plan:
 3. Run the same review, commit, push, and memory update flow as standalone mode.
 
 ## Reasoning
-- Default to `reasoning_effort: medium`.
-- Use higher reasoning only for planning-heavy, ambiguous, or high-risk tasks.
+- Implementation default: `model_reasoning_effort = "medium"`.
+- Planning default: `plan_mode_reasoning_effort = "high"`.
+- When Claude hands off a concrete plan, keep implementation at `medium` unless the plan is incomplete or contradictory.
+- In standalone mode, use the shared Model Auto-Routing Criteria before planning. If the plan is complex enough that `high` is likely to produce an over-fragmented or fragile plan, stop before implementation and recommend rerunning the planning step with:
+
+`codex -c 'plan_mode_reasoning_effort="xhigh"'`
+
+- Do not translate Claude's `/model opus` instruction into Codex. Codex uses reasoning effort, not Claude model switching.
 
 ## Tools
 - File edits: direct edits are allowed on the Codex side.
 - Shell: use git, npm, Gemini CLI, and project test commands as needed.
 - Do not call `codex exec` recursively. You are Codex.
 
+## Verification Procedure
+- Before finishing code changes, identify the project's standard checks from CI, docs, package manifests, Makefile/Justfile/Taskfile, or language project files.
+- Prefer project-defined commands over generic guesses.
+- Match verification to the change: run build/compile, tests, lint/static analysis, format checks, and type/static checks when they exist and are relevant.
+- For docs/config-only changes, run affected validation instead of the full code test suite unless the docs/config change alters build, install, or runtime behavior.
+- Report every command run and any skipped relevant check with the reason.
+
 ## Docs Delegation
-Long-form docs such as READMEs, changelogs, API docs, and extensive inline comments may go to Gemini CLI:
+Documentation fallback order is Gemini CLI, then Codex, then Claude. Use Gemini first for long-form docs such as READMEs, changelogs, API docs, and extensive inline comments:
 
 `gemini -p "<prompt>" < <file-or-diff>`
 

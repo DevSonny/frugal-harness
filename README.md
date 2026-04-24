@@ -1,83 +1,56 @@
-[한국어로 읽기 →](./README.ko.md)
+[한국어로 읽기 ->](./README.ko.md)
 
 # frugal-harness
 
-<p align="center">
-  <img src="https://github.com/DevSonny.png" width="120" />
-  <br/>
-  <strong>DevSonny</strong> — A developer who loves FC Seoul ⚽
-</p>
+frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Plus, and Gemini CLI so the whole development loop can run without a $100/mo setup.
 
-**Plan with Opus. Build with Codex. Document with Gemini. Ship cheap.**
+The core idea is role separation.
 
-Most AI coding setups assume you're on a $100/mo plan.
-This one doesn't.
+- Claude Code plans and orchestrates.
+- Codex CLI implements, reviews code, commits, and pushes.
+- Gemini CLI writes long-form docs such as READMEs, changelogs, and API documentation.
 
-frugal-harness is built for **Claude Pro ($20/mo)** and **ChatGPT Plus ($20/mo)** users
-who want a real multi-agent workflow — without the $100+ price tag.
-Gemini CLI handles all the documentation for free.
+In normal use, you open Claude Code and speak naturally. The harness rules decide which CLI should handle each stage behind the scenes.
 
-It takes the best ideas from two great projects —
-**[gstack](https://github.com/garrytan/gstack)**
-and **[oh-my-claudecode](https://github.com/Yeachan-Heo/oh-my-claudecode)** —
-and strips them down to what actually matters.
+## Why Split The Roles?
 
----
+Most AI coding setups assume a $100/mo plan. frugal-harness is designed around **Claude Pro ($20/mo)** and **ChatGPT Plus ($20/mo)**, with documentation work delegated to free Gemini CLI.
 
-## The three-agent lineup
+**Total: $40/mo** as the baseline.
 
-| Agent | Plan | Model | Role |
-|---|---|---|---|
-| **Claude Code** | Claude Pro $20/mo | `opusplan` | **Planning (Opus)** + orchestration (Sonnet) |
-| **Codex CLI** | ChatGPT Plus $20/mo | `gpt-5.5` | Build, review, commit & push |
-| **Gemini CLI** | Free (1,000 req/day) | `gemini-2.5-flash-lite` | All docs — README, changelogs, inline comments |
+Claude is most efficient when it focuses on planning and orchestration. Codex is better suited for implementation, code review, commits, and pushes. Gemini is useful for long, repetitive documentation tasks.
 
-**Total: $40/mo.** No $100 plan needed.
-Fallback: if Codex or Gemini hits its quota, Claude covers that role temporarily.
+This keeps Claude session quota out of routine code editing and uses each tool where it is strongest.
 
-All three models are pinned automatically at install time — no manual `/model` setup needed.
-Claude Code is set to `opusplan` by default: Opus kicks in only when you enter plan mode, Sonnet handles everything else. The PreToolUse hook (below) ensures Sonnet delegates all code changes to Codex, so the Claude session quota is only used for planning + orchestration.
+## Agent Roles
 
----
+| Tool | Model/settings | Role |
+|---|---|---|
+| Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration |
+| Codex CLI | `gpt-5.5`, plan `high`, implementation `medium` | Implementation, code review, commit, push |
+| Gemini CLI | `gemini-2.5-flash-lite`, free 1,000 req/day | README, changelog, API docs, long-form writing |
 
-## What's inside
-
-| File | What it does |
-|---|---|
-| `CLAUDE.md` | Global rules + skill loader |
-| `shared/harness-core.md` | Shared harness policy — the single source of truth |
-| `shared/codex-wrapper.md` | Codex-only standalone and relay-mode rules |
-| `skills/plan.md` | Think before you build |
-| `skills/exec.md` | Build from the plan |
-| `skills/review.md` | Catch issues before committing |
-| `skills/docs.md` | Hand off docs to Gemini |
-| `skills/ship.md` | Checklist before you push |
-| `scripts/sync-agents.sh` | Builds `~/.codex/AGENTS.md` from the shared core |
-| `~/.codex/AGENTS.md` | Auto-generated Codex standalone harness |
-| `scripts/usage.sh` | Detailed usage report for all three CLIs |
-| `scripts/usage-statusline.sh` | Claude Code statusline — live usage at a glance |
-| `scripts/lib-claude-window.sh` | Rolling 5h/7d window helper for Claude stats |
-| `install.sh` | One-liner setup |
-
----
+Claude does not normally edit code directly. Code implementation and code review belong to Codex.
 
 ## Prerequisites
 
-Before installing frugal-harness, make sure these four are set up:
-
 ### 1. Claude Code
+
 ```bash
 npm install -g @anthropic-ai/claude-code
 claude login
 ```
-→ Requires **Claude Pro** ($20/mo) at minimum. [claude.ai/pricing](https://claude.ai/pricing)
+
+The baseline assumes **Claude Pro ($20/mo)**.
 
 ### 2. Codex CLI
+
 ```bash
 npm install -g @openai/codex
 codex login
 ```
-→ Requires **ChatGPT Plus** ($20/mo) at minimum. [openai.com/pricing](https://openai.com/pricing)
+
+The baseline assumes **ChatGPT Plus ($20/mo)**.
 
 ### 3. Gemini CLI
 
@@ -85,66 +58,26 @@ codex login
 npm install -g @google/gemini-cli
 ```
 
-Gemini CLI requires an API key. Add it to your shell config:
-
-<details><summary>zsh</summary>
+Gemini CLI needs an API key.
 
 ```bash
-echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.zshrc
-source ~/.zshrc
+export GEMINI_API_KEY="your-key-here"
+gemini -p 'say hi'
 ```
 
-</details>
-
-<details><summary>bash (Linux)</summary>
-
-```bash
-echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.bashrc
-source ~/.bashrc
-```
-
-</details>
-
-<details><summary>bash (macOS)</summary>
-
-```bash
-echo 'export GEMINI_API_KEY="your-key-here"' >> ~/.bash_profile
-source ~/.bash_profile
-```
-
-</details>
-
-<details><summary>fish</summary>
-
-```fish
-set -Ux GEMINI_API_KEY "your-key-here"
-```
-
-</details>
-
-Open a new terminal, then verify:
-
-```bash
-[ -n "$GEMINI_API_KEY" ] && echo 'OK' || echo 'NOT SET'
-echo "Key prefix: ${GEMINI_API_KEY:0:6}..."
-gemini -p 'say hi'   # optional — 1 free-tier request
-```
-
-Get a free key at: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-(Free tier: 1,000 req/day — no credit card needed)
+Get a free key at <https://aistudio.google.com/apikey>.
 
 ### 4. jq
-The installation command is automatically detected based on your OS:
-```
-macOS:  brew install jq
-Ubuntu/Debian: sudo apt install jq
-Fedora/RHEL: sudo dnf install jq
-Arch: sudo pacman -S jq
-```
-(No need to check yourself during installation as it's auto-detected)
-Used by the usage scripts to parse CLI session data.
 
----
+The `usage` dashboard and installer use `jq` for JSON handling.
+
+```bash
+# macOS
+brew install jq
+
+# Ubuntu/Debian
+sudo apt install jq
+```
 
 ## Install
 
@@ -152,72 +85,145 @@ Used by the usage scripts to parse CLI session data.
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
 
-The installer also:
-- Pins Claude Code to `opusplan` — Opus only in plan mode, Sonnet for orchestration
-- Pins Codex default model to `gpt-5.5` — latest coding model
-- Pins Gemini default model to `gemini-2.5-flash-lite` — cheapest, for docs
-- Sets up the `usage` command for a combined usage report
-- Configures the Claude Code statusline with live Claude / Codex / Gemini usage
-- Installs a **PreToolUse hook** (`guard-code-edit.sh`) that blocks Claude from editing source code directly — forces delegation to Codex
-- Builds `~/.codex/AGENTS.md` from the shared harness core for Codex standalone fallback
+The installer configures:
 
-No `/model` commands needed. All three are configured automatically.
-Backs up any existing config before overwriting.
+- Claude Code default model: `sonnet`
+- Codex default model: `gpt-5.5`
+- Codex reasoning: planning `high`, implementation `medium`
+- Gemini default model: `gemini-2.5-flash-lite`
+- the `usage` command
+- Claude Code statusline
+- a PreToolUse guard that blocks Claude from editing source files directly
+- `~/.codex/AGENTS.md` for Codex standalone fallback
 
-> **If auto-pinning didn't apply (e.g. a pre-existing config, or the installer failed partway), set the models manually:**
->
-> - **Claude Code** — in a session: `/model opusplan`
->   Or edit `~/.claude/settings.json` and add/replace `"model": "opusplan"`.
-> - **Codex CLI** — edit `~/.codex/config.toml` and put `model = "gpt-5.5"` at the top.
->   Per-run: `codex --model gpt-5.5 ...`
-> - **Gemini CLI** — edit `~/.gemini/settings.json` to contain `{"model": {"name": "gemini-2.5-flash-lite"}}`.
->   Per-run: `gemini --model gemini-2.5-flash-lite -p "..."`
+No manual `/model` command is needed for normal work. For complex planning, Claude recommends Opus and only switches after user approval.
 
----
+## How To Use It
 
-## Enforced role separation (no cheating)
+Natural language is the default interface.
 
-Sonnet works fine for most tasks, but for large or complex work where you want fewer iterations and trial-and-error, using Opus in plan mode (`opusplan`) is recommended.
-
-The whole point of frugal-harness is that **Claude never writes code** — Opus plans, Codex builds, Gemini docs. But when you're on `opusplan` (Opus for plan mode, Sonnet for everything else), Sonnet tends to ignore the rule and burn your Claude session quota implementing things directly.
-
-So frugal-harness installs a **PreToolUse hook** in `~/.claude/settings.json` that runs before every `Edit` / `Write` / `NotebookEdit` call. If the target is a source-code file (`.ts .tsx .js .jsx .py .sh .go .rs .java .c .cpp .sql ...`), the hook returns `exit 2` with a message telling Claude to delegate to `codex exec` instead. Claude sees the stderr as an error and automatically switches to Codex on the next turn.
-
-Docs and configs (`.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore) pass through untouched — you can still edit README directly.
-
-Result: Claude session quota stops being the bottleneck, Codex weekly quota actually gets used, and the "plan vs build" separation holds even on Sonnet.
-
-Script: [`scripts/guard-code-edit.sh`](./scripts/guard-code-edit.sh). Edit the extension list if your stack needs it (e.g. add `.lua` or `.nix`).
-
----
-
-## Usage dashboard
-
-Run `usage` anytime to see remaining quota across all three CLIs.
-Inside a Claude Code session, prefix it with `!` (e.g. `! usage`) — the `!` runs the command directly in your shell so the full output lands in the conversation without Claude truncating it.
-
-```
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
- CLI USAGE  (2026-04-20 22:30)
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Claude Code  (rolling window from project JSONL)
-   Session 5h: ████████████████████  81% left  (375/475 msgs used)
-   Weekly 7d:  ██████████████░░░░░░  86% left  (378/2700 msgs used)
-
-Codex CLI  (Plus · gpt-5.5 · data from 2m ago)
-   5h limit:   ████████████████████  99% left  (resets 02:56)
-   Weekly:     ██████░░░░░░░░░░░░░░  28% left  (resets Apr 24)
-
-Gemini CLI  (gemini-2.5-flash-lite)
-   Today:      4 API calls — in 33k / out 1.4k
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```text
+"Plan this feature."
+"Now implement it."
+"Review the code."
+"Update the docs."
+"Run checks, commit, and push."
 ```
 
-Color coding: green ≥ 50% · yellow 20–50% · red < 20% remaining.
+Claude decides whether the current request is planning, implementation, review, docs, or shipping.
 
-The Claude Code statusline shows the same data inline while you work.
+Slash commands are optional shortcuts.
 
----
+| Command | Meaning | Owner |
+|---|---|---|
+| `/plan` | Break down work and call out risks | Claude |
+| `/exec` | Implement | Codex |
+| `/review` | Review code | Codex |
+| `/docs` | Write or update docs | Gemini -> Codex -> Claude |
+| `/ship` | Verify, commit, and push | Codex |
+
+Plain language follows the same routing.
+
+## What Claude Does Not Do
+
+Claude does not normally edit code directly.
+
+- Code implementation: Codex
+- Code review: Codex
+- Commit messages: Codex
+- Commit/push: Codex
+
+If Codex quota is exhausted and Claude needs to act as an implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
+
+Documentation goes to Gemini first. If Gemini fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
+
+## Model Routing
+
+The default rule is to use the cheapest capable path, then escalate only when planning quality matters.
+
+- Normal planning and orchestration: Claude Sonnet
+- Complex planning: Claude recommends Opus, then waits for user approval
+- Codex standalone planning: `plan_mode_reasoning_effort = "high"`
+- Codex implementation: `model_reasoning_effort = "medium"`
+- Very complex Codex standalone planning: recommend rerunning with `xhigh`
+
+A task counts as complex planning when it likely involves:
+
+- 10 or more files
+- architecture, DB schema, or API design changes
+- cross-module dependency analysis
+- a broad refactor
+- judgment-heavy structure or design decisions
+
+## Quality Gate
+
+The harness is not web-only. Codex first discovers the project's standard verification commands, then runs checks that match the stack and the change.
+
+Places to inspect first:
+
+- README
+- CI config
+- Makefile, Justfile, Taskfile
+- `package.json`
+- `pyproject.toml`, `tox.ini`, `noxfile.py`
+- `Cargo.toml`
+- `go.mod`
+- `pom.xml`, `build.gradle`
+
+For code changes, run the relevant layers when available:
+
+- build/compile
+- tests
+- static analysis/lint
+- format check
+- type/static correctness
+
+Examples:
+
+| Ecosystem | Typical checks |
+|---|---|
+| Node/TypeScript | `npm test`, `npm run lint`, `npm run build`, `tsc --noEmit` |
+| Python | `pytest`, `ruff check`, `ruff format --check`, `mypy` or `pyright` |
+| Go | `go test ./...`, `go vet ./...`, `gofmt` |
+| Rust | `cargo test`, `cargo check`, `cargo clippy` |
+
+For docs or config-only changes, run affected validation instead of the full test suite: Markdown checks, JSON/YAML/TOML parsing, shell syntax checks, or generation scripts.
+
+If a relevant command cannot be found or cannot run, the final report must say what was skipped, why, and what manual review was done instead.
+
+## AGENTS.md Structure
+
+`~/.codex/AGENTS.md` is generated output. Do not edit it directly.
+
+Source files:
+
+| File | Role |
+|---|---|
+| `CLAUDE.md` | Claude role and delegation rules |
+| `shared/harness-core.md` | Shared policy for Claude and Codex |
+| `shared/codex-wrapper.md` | Codex standalone/relay rules |
+| `skills/*.md` | Short optional slash-command prompts |
+| `scripts/sync-agents.sh` | Regenerates `~/.codex/AGENTS.md` from shared sources |
+
+To change Codex policy, edit `shared/harness-core.md` or `shared/codex-wrapper.md`, then run:
+
+```bash
+scripts/sync-agents.sh
+```
+
+## Usage Dashboard
+
+```bash
+usage
+```
+
+Inside Claude Code, run it through the shell:
+
+```bash
+! usage
+```
+
+`usage` shows Claude, Codex, and Gemini usage in one place.
 
 ## Uninstall
 
@@ -225,170 +231,4 @@ The Claude Code statusline shows the same data inline while you work.
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/uninstall.sh | bash
 ```
 
-Backs up your current config before removing it.
-
----
-
-## How it works
-
-### The big picture
-
-You only ever talk to **one CLI: Claude Code.**
-
-Claude reads the rules in `CLAUDE.md`, figures out which stage you're in, and silently calls Codex or Gemini as sub-processes (`codex exec "..."` and `gemini -p "..."`) when it's their turn. Output streams back to the same session. No juggling three terminals.
-
-Mental model: **Claude is the conductor. Codex and Gemini are the players.** You only care which stage you're in — Claude handles the hand-offs.
-
----
-
-### The 5-stage flow
-
-```
- /plan  ──▶  /exec  ──▶  /review  ──▶  /docs  ──▶  /ship
-   │           │            │            │           │
- Claude      Codex        Codex        Gemini       Codex
- (Opus)    (GPT-5.5)    (GPT-5.5)      (free)     (GPT-5.5)
-   │           │            │            │           │
-  think       build    sanity-check     docs     commit+push
-```
-
-Every feature walks all 5 stages in order. No skipping.
-
----
-
-### Stage 1 — `/plan` → Claude (Opus)
-
-**You:** describe the feature in plain English.
-> "Add a dark mode toggle to settings. Persist across sessions. Default to system preference."
-
-**Claude:** breaks it into a numbered task list, flags risks, and calls out unknowns upfront.
-> *Task 1: Add `theme` field to settings schema*
-> *Task 2: Create `ThemeContext` with React Context*
-> *Task 3: Toggle UI on settings page*
-> *Task 4: `localStorage` persistence + `prefers-color-scheme` fallback*
-> *Risk: existing CSS uses hard-coded hex values — audit first.*
-
-**Output:** an ordered task list you can approve, edit, or reject.
-
-**Why Claude here:** Opus is the strongest reasoner available. One good plan prevents ten bad commits — this is where the expensive token pays off.
-
----
-
-### Stage 2 — `/exec` → Codex
-
-**You:** `/exec` (or "let's start building").
-
-**Claude:** runs `codex exec "Implement task 1: <details>"` in the background. Codex's output streams back to your session.
-
-**Codex:** picks the first unchecked task, implements it, runs tests, shows you the diff.
-
-**Rule:** one task at a time. If scope creeps mid-build, stop and re-run `/plan`.
-
-**Why Codex here:** ChatGPT Plus has its own quota, separate from Claude. Heavy coding doesn't drain your Claude session.
-
----
-
-### Stage 3 — `/review` → Codex
-
-**You:** `/review` before **every** commit. No exceptions.
-
-**Codex checks:**
-- Does the code match the plan?
-- Any obvious bugs or missed edge cases?
-- Hardcoded values that should be config?
-- Is the diff minimal and clean?
-- Are tests passing?
-
-**Output:** either `LGTM` or a concrete list of issues.
-
-**Caveat:** Codex is reviewing code it just wrote. For high-stakes changes (auth, migrations, security), ask Claude for a second independent pass.
-
----
-
-### Stage 4 — `/docs` → Gemini
-
-**You:** `/docs update CHANGELOG` / `/docs add comments to this file` / etc.
-
-**Claude:** runs `gemini -p "<your request>"` in the background.
-
-**Gemini:** reads the relevant code or diff and writes prose — README updates, changelog entries, inline comments.
-
-**Why Gemini here:** 1,000 free requests/day. Docs are repetitive and high-volume — burning Claude or Codex tokens here is wasteful. Gemini's 1M-token context also eats whole codebases without flinching.
-
----
-
-### Stage 5 — `/ship` → Codex
-
-**You:** `/ship` when you're ready.
-
-**What happens:**
-1. Codex runs the ship checklist (tests pass, no debug logs, clean branch).
-2. Codex writes the commit message directly from the final diff.
-3. Codex runs `git add -A && git commit && git push`.
-
-**Output:** a clean commit pushed to `origin`.
-
-**Why the split:** Gemini handles docs elsewhere; commit messages stay with Codex for context fidelity. Claude doesn't touch this stage.
-
----
-
-### End-to-end: what a real feature looks like
-
-Say you're building a dark-mode toggle:
-
-1. **You → Claude:** *"Add a dark mode toggle to settings, persist across sessions."*
-2. **Claude** returns a 4-task plan. You approve.
-3. **You:** `/exec`. Codex builds Task 1, shows the diff. `/exec` again. Task 2. And so on.
-4. **You:** `/review`. Codex flags one issue: hard-coded `#fff` color. You fix it.
-5. **You:** `/docs update CHANGELOG`. Gemini writes the entry.
-6. **You:** `/ship`. Codex runs tests, writes the commit message, and pushes.
-7. **Claude quota spent:** ~2% (just the initial plan and a brief `/review` reply).
-
-No terminal-switching. No manual CLI juggling. One conversation, three agents behind it.
-
----
-
-### Slash commands or plain language — both work
-
-Slash commands are just shortcuts. They load the matching file from `skills/` and hand it to the right agent. Typing `/plan` is literally the same as saying:
-
-> "I want to build X. Break it into tasks, flag the risks, give me a numbered list."
-
-| You prefer... | Just do this |
-|---|---|
-| Slash commands | `/plan`, `/exec`, `/review`, `/docs`, `/ship` |
-| Plain language | Describe what you want — Claude figures out the stage |
-| Mix | Commands for routine steps, plain language for new features |
-
-The files in `skills/` are saved prompts. Edit them, delete them, or rewrite them in your own voice.
-
----
-
-### Fallback — when an agent runs out of quota
-
-The real limits:
-
-- **Claude Pro:** 5h rolling session + 7-day weekly
-- **ChatGPT Plus (Codex):** 5h rolling + 7-day weekly
-- **Gemini free tier:** 1,000 requests/day
-
-If an agent hits its cap mid-workflow:
-
-1. Run `usage` — see who's empty.
-2. **Temporarily** route that stage to Claude (if Codex or Gemini is out).
-3. Revert as soon as the quota resets.
-
-Manual override only. Don't automate it — that defeats the whole cost-discipline point of frugal-harness.
-
-Claude out entirely? Codex can run the whole flow alone. `~/.codex/AGENTS.md` is auto-built from the same `shared/harness-core.md` that Claude uses, plus a Codex wrapper that turns on standalone mode: plan, build, review, commit, and push all in Codex. No orphaned session.
-
----
-
-## Why frugal?
-
-$100/mo plans are great. But not everyone needs them.
-
-Claude Pro and ChatGPT Plus are $20/mo each.
-Gemini CLI is free up to 1,000 requests/day.
-With the right workflow, $40/mo gets you surprisingly far.
-frugal-harness is that workflow.
+Existing config files are backed up before removal.
