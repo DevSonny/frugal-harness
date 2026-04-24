@@ -103,7 +103,7 @@ if [[ -n "$ROLLOUT" ]] && command -v jq >/dev/null 2>&1; then
 
     cx_plan=$(printf '%s' "$rl" | jq -r '.plan_type')
     cx_model=$(grep '"type":"token_count"' "$ROLLOUT" 2>/dev/null | tail -1 | \
-               jq -r '.payload.model // "gpt-5.4"' 2>/dev/null || echo "gpt-5.4")
+               jq -r '.payload.model // "gpt-5.5"' 2>/dev/null || echo "gpt-5.5")
 
     printf '%bCodex CLI%b  %b(%s · %s · data from %sm ago)%b\n' \
       "$CY" "$RS" "$DM" "$cx_plan" "$cx_model" "$snap_min" "$RS"

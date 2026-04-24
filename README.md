@@ -29,7 +29,7 @@ and strips them down to what actually matters.
 | Agent | Plan | Model | Role |
 |---|---|---|---|
 | **Claude Code** | Claude Pro $20/mo | `opusplan` | **Planning (Opus)** + orchestration (Sonnet) |
-| **Codex CLI** | ChatGPT Plus $20/mo | `gpt-5.4` | Build, review, commit & push |
+| **Codex CLI** | ChatGPT Plus $20/mo | `gpt-5.5` | Build, review, commit & push |
 | **Gemini CLI** | Free (1,000 req/day) | `gemini-2.5-flash-lite` | All docs — README, changelogs, comments, commit messages |
 
 **Total: $40/mo.** No $100 plan needed.
@@ -150,7 +150,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 The installer also:
 - Pins Claude Code to `opusplan` — Opus only in plan mode, Sonnet for orchestration
-- Pins Codex default model to `gpt-5.4` — latest coding model
+- Pins Codex default model to `gpt-5.5` — latest coding model
 - Pins Gemini default model to `gemini-2.5-flash-lite` — cheapest, for docs
 - Sets up the `usage` command for a combined usage report
 - Configures the Claude Code statusline with live Claude / Codex / Gemini usage
@@ -163,8 +163,8 @@ Backs up any existing config before overwriting.
 >
 > - **Claude Code** — in a session: `/model opusplan`
 >   Or edit `~/.claude/settings.json` and add/replace `"model": "opusplan"`.
-> - **Codex CLI** — edit `~/.codex/config.toml` and put `model = "gpt-5.4"` at the top.
->   Per-run: `codex --model gpt-5.4 ...`
+> - **Codex CLI** — edit `~/.codex/config.toml` and put `model = "gpt-5.5"` at the top.
+>   Per-run: `codex --model gpt-5.5 ...`
 > - **Gemini CLI** — edit `~/.gemini/settings.json` to contain `{"model": {"name": "gemini-2.5-flash-lite"}}`.
 >   Per-run: `gemini --model gemini-2.5-flash-lite -p "..."`
 
@@ -199,7 +199,7 @@ Claude Code  (rolling window from project JSONL)
    Session 5h: ████████████████████  81% left  (375/475 msgs used)
    Weekly 7d:  ██████████████░░░░░░  86% left  (378/2700 msgs used)
 
-Codex CLI  (Plus · gpt-5.4 · data from 2m ago)
+Codex CLI  (Plus · gpt-5.5 · data from 2m ago)
    5h limit:   ████████████████████  99% left  (resets 02:56)
    Weekly:     ██████░░░░░░░░░░░░░░  28% left  (resets Apr 24)
 
