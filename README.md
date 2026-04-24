@@ -5,7 +5,7 @@
 <p align="center">
   <img src="https://github.com/DevSonny.png" width="120" />
   <br/>
-  <strong>DevSonny</strong> — A developer who loves FC Seoul
+  <strong>DevSonny</strong>
 </p>
 
 frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Plus, and Gemini CLI so the whole development loop can run without a $100/mo setup.
@@ -125,7 +125,7 @@ Slash commands are optional shortcuts.
 | `/plan` | Break down work and call out risks | Claude |
 | `/exec` | Implement | Codex |
 | `/review` | Review code | Codex |
-| `/docs` | Write or update docs | Gemini -> Codex -> Claude |
+| `/docs` | Write or update docs | Gemini (→ Codex if exhausted → Claude last resort) |
 | `/ship` | Verify, commit, and push | Codex |
 
 Plain language follows the same routing.

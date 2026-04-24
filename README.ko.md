@@ -5,7 +5,7 @@
 <p align="center">
   <img src="https://github.com/DevSonny.png" width="120" />
   <br/>
-  <strong>DevSonny</strong> — FC Seoul을 사랑하는 개발자
+  <strong>DevSonny</strong>
 </p>
 
 frugal-harness는 Claude Pro, ChatGPT Plus, Gemini CLI를 조합해 비용을 아끼면서도 실제 개발 흐름을 끝까지 처리하도록 만든 하네스입니다.
@@ -125,7 +125,7 @@ slash command는 선택 단축키입니다.
 | `/plan` | 작업을 나누고 리스크를 정리 | Claude |
 | `/exec` | 구현 | Codex |
 | `/review` | 코드 리뷰 | Codex |
-| `/docs` | 문서 작성/수정 | Gemini -> Codex -> Claude |
+| `/docs` | 문서 작성/수정 | Gemini (→ Codex 소진 시 → Claude 최후 수단) |
 | `/ship` | 검증, 커밋, 푸시 | Codex |
 
 자연어로 말해도 같은 라우팅을 따릅니다.
