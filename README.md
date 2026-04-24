@@ -30,7 +30,7 @@ and strips them down to what actually matters.
 |---|---|---|---|
 | **Claude Code** | Claude Pro $20/mo | `opusplan` | **Planning (Opus)** + orchestration (Sonnet) |
 | **Codex CLI** | ChatGPT Plus $20/mo | `gpt-5.5` | Build, review, commit & push |
-| **Gemini CLI** | Free (1,000 req/day) | `gemini-2.5-flash-lite` | All docs — README, changelogs, comments, commit messages |
+| **Gemini CLI** | Free (1,000 req/day) | `gemini-2.5-flash-lite` | All docs — README, changelogs, inline comments |
 
 **Total: $40/mo.** No $100 plan needed.
 Fallback: if Codex or Gemini hits its quota, Claude covers that role temporarily.
@@ -45,11 +45,15 @@ Claude Code is set to `opusplan` by default: Opus kicks in only when you enter p
 | File | What it does |
 |---|---|
 | `CLAUDE.md` | Global rules + skill loader |
+| `shared/harness-core.md` | Shared harness policy — the single source of truth |
+| `shared/codex-wrapper.md` | Codex-only standalone and relay-mode rules |
 | `skills/plan.md` | Think before you build |
 | `skills/exec.md` | Build from the plan |
 | `skills/review.md` | Catch issues before committing |
 | `skills/docs.md` | Hand off docs to Gemini |
 | `skills/ship.md` | Checklist before you push |
+| `scripts/sync-agents.sh` | Builds `~/.codex/AGENTS.md` from the shared core |
+| `~/.codex/AGENTS.md` | Auto-generated Codex standalone harness |
 | `scripts/usage.sh` | Detailed usage report for all three CLIs |
 | `scripts/usage-statusline.sh` | Claude Code statusline — live usage at a glance |
 | `scripts/lib-claude-window.sh` | Rolling 5h/7d window helper for Claude stats |
@@ -155,6 +159,7 @@ The installer also:
 - Sets up the `usage` command for a combined usage report
 - Configures the Claude Code statusline with live Claude / Codex / Gemini usage
 - Installs a **PreToolUse hook** (`guard-code-edit.sh`) that blocks Claude from editing source code directly — forces delegation to Codex
+- Builds `~/.codex/AGENTS.md` from the shared harness core for Codex standalone fallback
 
 No `/model` commands needed. All three are configured automatically.
 Backs up any existing config before overwriting.
@@ -242,7 +247,7 @@ Mental model: **Claude is the conductor. Codex and Gemini are the players.** You
  /plan  ──▶  /exec  ──▶  /review  ──▶  /docs  ──▶  /ship
    │           │            │            │           │
  Claude      Codex        Codex        Gemini       Codex
- (Opus)    (GPT-5.4)    (GPT-5.4)      (free)     (GPT-5.4)
+ (Opus)    (GPT-5.5)    (GPT-5.5)      (free)     (GPT-5.5)
    │           │            │            │           │
   think       build    sanity-check     docs     commit+push
 ```
@@ -306,7 +311,7 @@ Every feature walks all 5 stages in order. No skipping.
 
 **Claude:** runs `gemini -p "<your request>"` in the background.
 
-**Gemini:** reads the relevant code or diff and writes prose — README updates, changelog entries, inline comments, commit messages.
+**Gemini:** reads the relevant code or diff and writes prose — README updates, changelog entries, inline comments.
 
 **Why Gemini here:** 1,000 free requests/day. Docs are repetitive and high-volume — burning Claude or Codex tokens here is wasteful. Gemini's 1M-token context also eats whole codebases without flinching.
 
@@ -318,12 +323,12 @@ Every feature walks all 5 stages in order. No skipping.
 
 **What happens:**
 1. Codex runs the ship checklist (tests pass, no debug logs, clean branch).
-2. Gemini writes the commit message from the staged diff.
-3. Codex runs `git add -A && git commit -m "<message>" && git push`.
+2. Codex writes the commit message directly from the final diff.
+3. Codex runs `git add -A && git commit && git push`.
 
 **Output:** a clean commit pushed to `origin`.
 
-**Why the split:** Gemini writes prose well and cheaply; Codex already has shell access and test-running muscle. Claude doesn't touch this stage.
+**Why the split:** Gemini handles docs elsewhere; commit messages stay with Codex for context fidelity. Claude doesn't touch this stage.
 
 ---
 
@@ -336,7 +341,7 @@ Say you're building a dark-mode toggle:
 3. **You:** `/exec`. Codex builds Task 1, shows the diff. `/exec` again. Task 2. And so on.
 4. **You:** `/review`. Codex flags one issue: hard-coded `#fff` color. You fix it.
 5. **You:** `/docs update CHANGELOG`. Gemini writes the entry.
-6. **You:** `/ship`. Codex runs tests, Gemini writes the commit message, Codex pushes.
+6. **You:** `/ship`. Codex runs tests, writes the commit message, and pushes.
 7. **Claude quota spent:** ~2% (just the initial plan and a brief `/review` reply).
 
 No terminal-switching. No manual CLI juggling. One conversation, three agents behind it.
@@ -374,6 +379,8 @@ If an agent hits its cap mid-workflow:
 3. Revert as soon as the quota resets.
 
 Manual override only. Don't automate it — that defeats the whole cost-discipline point of frugal-harness.
+
+Claude out entirely? Codex can run the whole flow alone. `~/.codex/AGENTS.md` is auto-built from the same `shared/harness-core.md` that Claude uses, plus a Codex wrapper that turns on standalone mode: plan, build, review, commit, and push all in Codex. No orphaned session.
 
 ---
 

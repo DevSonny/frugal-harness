@@ -33,3 +33,16 @@
 ### 에러 및 해결
 - macOS bash 3.2에서 mapfile 없음 → while read -d '' 루프로 교체
 - Codex read-only 샌드박스로 파일 쓰기 차단 → Write 도구로 직접 작성
+
+## 2026-04-24 — 공통 하네스 분리
+
+### 완료된 작업
+- 공통 정책을 shared/harness-core.md로 분리
+- Codex standalone 규칙을 shared/codex-wrapper.md로 분리
+- scripts/sync-agents.sh 추가 및 ~/.codex/AGENTS.md 자동 생성 구조 적용
+- Claude wrapper는 @./shared/harness-core.md import + 역할/위임 규칙만 유지
+
+### 주요 결정
+- Codex/Gemini 쿼터 고갈 시 Claude 임시 대체는 유지
+- Claude unavailable 시 Codex는 ~/.codex/AGENTS.md로 단독 plan → build → review → commit → push 수행
+- 커밋 메시지는 Gemini가 아니라 Codex가 직접 작성

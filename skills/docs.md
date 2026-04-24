@@ -5,7 +5,6 @@
 - API documentation
 - Inline code comments
 - Changelogs
-- Commit messages (all sizes)
 
 ## Why Gemini?
 - Free tier: 1,000 req/day, 1M token context

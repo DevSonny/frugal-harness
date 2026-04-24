@@ -102,7 +102,10 @@ echo "All prerequisites met. Installing..."
 
 REPO_RAW="https://raw.githubusercontent.com/DevSonny/frugal-harness/main"
 SKILLS_DIR="$HOME/.claude/skills"
+SHARED_DIR="$HOME/.claude/shared"
+CLAUDE_SCRIPTS_DIR="$HOME/.claude/scripts"
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
+CODEX_AGENTS="$HOME/.codex/AGENTS.md"
 BACKUP_SUFFIX=".bak.$(date +%Y%m%d%H%M%S)"
 
 # Backup existing files
@@ -111,11 +114,33 @@ if [ -f "$CLAUDE_MD" ]; then
   echo "  ↩ Backed up existing CLAUDE.md"
 fi
 
-# Create skills dir
-mkdir -p "$SKILLS_DIR"
+if [ -f "$CODEX_AGENTS" ]; then
+  cp "$CODEX_AGENTS" "${CODEX_AGENTS}${BACKUP_SUFFIX}"
+  echo "  ↩ Backed up existing AGENTS.md"
+fi
+
+# Create Claude runtime dirs
+mkdir -p "$SKILLS_DIR" "$SHARED_DIR" "$CLAUDE_SCRIPTS_DIR"
 
 # Download CLAUDE.md
 curl -fsSL "$REPO_RAW/CLAUDE.md" -o "$CLAUDE_MD"
+
+# Download shared harness files
+for shared_name in harness-core codex-wrapper; do
+  local_path="$SHARED_DIR/${shared_name}.md"
+  if [ -f "$local_path" ]; then
+    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
+  fi
+  curl -fsSL "$REPO_RAW/shared/${shared_name}.md" -o "$local_path"
+done
+
+# Download Claude-side sync script for Codex AGENTS.md
+SYNC_SCRIPT="$CLAUDE_SCRIPTS_DIR/sync-agents.sh"
+if [ -f "$SYNC_SCRIPT" ]; then
+  cp "$SYNC_SCRIPT" "${SYNC_SCRIPT}${BACKUP_SUFFIX}"
+fi
+curl -fsSL "$REPO_RAW/scripts/sync-agents.sh" -o "$SYNC_SCRIPT"
+chmod +x "$SYNC_SCRIPT"
 
 # Download skill files
 SKILLS=(plan exec docs review ship)
@@ -183,6 +208,10 @@ else
   printf 'model = "gpt-5.5"\n' > "$CODEX_CONFIG"
 fi
 echo "  ✓ Codex default model: gpt-5.5"
+
+# Build Codex standalone harness
+"$SYNC_SCRIPT"
+echo "  ✓ Codex AGENTS.md generated"
 
 # Pin Gemini default model to gemini-2.5-flash-lite (cheapest)
 GEMINI_SETTINGS="$HOME/.gemini/settings.json"
