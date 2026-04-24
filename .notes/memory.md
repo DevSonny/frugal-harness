@@ -81,3 +81,12 @@
 
 ### 미해결/주의
 - repo 루트의 빈 .codex 파일은 read-only bind mount로 보이며 rm 시 "device or resource busy"로 삭제 실패
+
+## 2026-04-24 — Claude slash command 등록 설치 반영
+
+### 완료된 작업
+- install.sh의 스킬 다운로드 루프 직후에 ~/.claude/commands 생성 및 SKILLS 배열 기반 slash command 복사 로직 추가
+- README.md / README.ko.md의 설치 구성 목록에 Claude Code slash command 등록 항목 추가
+
+### 주의
+- 현재 Codex 샌드박스가 /Users/son/.claude/commands 쓰기를 차단해 즉시 홈 디렉터리 등록은 실행하지 못함

@@ -98,6 +98,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 - Codex reasoning: planning `high`, implementation `medium`
 - Gemini 기본 모델: `gemini-2.5-flash-lite`
 - `usage` 명령
+- `~/.claude/commands` 아래 Claude Code slash command
 - Claude Code statusline
 - Claude의 소스 파일 직접 편집을 막는 PreToolUse guard
 - Codex 단독 실행용 `~/.codex/AGENTS.md`

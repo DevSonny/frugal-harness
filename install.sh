@@ -184,6 +184,14 @@ for skill_name in "${SKILLS[@]}"; do
   curl -fsSL "$REPO_RAW/skills/${skill_name}.md" -o "$local_path"
 done
 
+# Register skills as Claude Code slash commands
+COMMANDS_DIR="$HOME/.claude/commands"
+mkdir -p "$COMMANDS_DIR"
+for skill_name in "${SKILLS[@]}"; do
+  cp "$SKILLS_DIR/${skill_name}.md" "$COMMANDS_DIR/${skill_name}.md"
+done
+echo "  ✓ Slash commands registered → $COMMANDS_DIR"
+
 # Install usage scripts
 SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
