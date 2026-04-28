@@ -40,28 +40,35 @@ Claude는 평상시 코드를 직접 편집하지 않습니다. 코드 구현과
 
 ## 설치 전 준비
 
-### 1. Claude Code
+### 1. Node.js와 npm
+
+frugal-harness는 로컬 JSON/JSONL 사용량 파일을 `jq` 없이 파싱하기 위해 Node.js를 사용합니다. Codex와 Gemini의 공식 설치 경로도 npm을 사용합니다.
+
+Node.js가 없다면 먼저 설치하세요.
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+# macOS
+brew install node
+
+# Ubuntu/Debian/WSL
+sudo apt install nodejs npm
+```
+
+### 2. Agent CLI
+
+installer는 누락된 CLI를 공식 설치 경로로 자동 설치할 수 있습니다.
+
+| CLI | frugal-harness가 사용하는 설치 경로 |
+|---|---|
+| Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| Codex CLI | `npm install -g @openai/codex` |
+| Gemini CLI | `npm install -g @google/gemini-cli` |
+
+설치 후 로그인합니다.
+
+```bash
 claude login
-```
-
-최소 **Claude Pro ($20/월)** 를 기준으로 합니다.
-
-### 2. Codex CLI
-
-```bash
-npm install -g @openai/codex
 codex login
-```
-
-최소 **ChatGPT Plus ($20/월)** 를 기준으로 합니다.
-
-### 3. Gemini CLI
-
-```bash
-npm install -g @google/gemini-cli
 ```
 
 Gemini CLI는 API 키가 필요합니다.
@@ -73,18 +80,6 @@ gemini -p 'say hi'
 
 무료 키는 <https://aistudio.google.com/apikey> 에서 받을 수 있습니다.
 
-### 4. jq
-
-`usage` 대시보드와 설치 스크립트가 JSON을 다루기 위해 `jq`를 사용합니다.
-
-```bash
-# macOS
-brew install jq
-
-# Ubuntu/Debian
-sudo apt install jq
-```
-
 ## 설치
 
 ```bash
@@ -93,6 +88,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 설치 스크립트는 다음을 설정합니다.
 
+- 누락된 Claude/Codex/Gemini CLI를 공식 설치 경로로 자동 설치
 - Claude Code 기본 모델: `sonnet`
 - Codex 기본 모델: `gpt-5.5`
 - Codex reasoning: planning `high`, implementation `medium`
@@ -102,6 +98,8 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 - 남은 쿼터와 현재 세션 비용을 표시하는 Claude Code statusline
 - Claude의 소스 파일 직접 편집을 막는 PreToolUse guard
 - Codex 단독 실행용 `~/.codex/AGENTS.md`
+
+CLI 자동 설치를 원하지 않으면 installer 실행 전에 `FRUGAL_SKIP_CLI_INSTALL=1`을 설정하세요.
 
 일반 작업에는 `/model` 수동 설정이 필요 없습니다. 복잡한 planning이 필요하면 Claude가 Opus 전환을 추천하고, 사용자가 승인한 경우에만 전환합니다.
 
@@ -231,6 +229,8 @@ Claude Code 세션 안에서는 다음처럼 실행하면 shell 출력이 그대
 ```
 
 `usage`는 Claude, Codex, Gemini 사용량을 한 번에 보여줍니다.
+
+대시보드는 Node.js로 동작하며 `jq`가 필요 없습니다. Codex 사용량은 최신 파일 timestamp가 아니라 모든 로컬 rollout 로그의 최신 `token_count` 이벤트를 기준으로 선택합니다.
 
 ## 언인스톨
 

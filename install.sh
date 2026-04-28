@@ -1,38 +1,6 @@
 #!/bin/bash
 set -e
 
-detect_jq_install_cmd() {
-  local id_all
-
-  if [ "$(uname -s)" = "Darwin" ]; then
-    echo "brew install jq"
-    return
-  fi
-
-  if [ -r /etc/os-release ]; then
-    # shellcheck disable=SC1091
-    . /etc/os-release
-    id_all=" ${ID:-} ${ID_LIKE:-} "
-
-    if [[ "$id_all" == *" debian "* ]] || [[ "$id_all" == *" ubuntu "* ]]; then
-      echo "sudo apt install jq"
-      return
-    fi
-
-    if [[ "$id_all" == *" fedora "* ]] || [[ "$id_all" == *" rhel "* ]] || [[ "$id_all" == *" centos "* ]]; then
-      echo "sudo dnf install jq"
-      return
-    fi
-
-    if [[ "$id_all" == *" arch "* ]]; then
-      echo "sudo pacman -S jq"
-      return
-    fi
-  fi
-
-  echo "install jq — see https://jqlang.org/download/"
-}
-
 detect_shell() {
   case "${SHELL:-}" in
     */zsh)  echo "zsh" ;;
@@ -53,6 +21,50 @@ rcfile_for_shell() {
     fish) echo "$HOME/.config/fish/config.fish" ;;
     *)    echo "" ;;
   esac
+}
+
+ensure_json_file() {
+  local file="$1"
+  mkdir -p "$(dirname "$file")"
+  if [ ! -f "$file" ]; then
+    printf '{}\n' > "$file"
+  fi
+}
+
+set_claude_settings() {
+  local file="$1"
+  local status_cmd="$2"
+  local guard_cmd="$3"
+
+  ensure_json_file "$file"
+  node -e '
+const fs = require("fs");
+const [file, statusCmd, guardCmd] = process.argv.slice(1);
+let data = {};
+try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+data.statusLine = { type: "command", command: statusCmd };
+data.model = "sonnet";
+data.hooks = data.hooks && typeof data.hooks === "object" ? data.hooks : {};
+data.hooks.PreToolUse = [{
+  matcher: "Edit|Write|NotebookEdit",
+  hooks: [{ type: "command", command: guardCmd }]
+}];
+fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
+' "$file" "$status_cmd" "$guard_cmd"
+}
+
+set_gemini_settings() {
+  local file="$1"
+
+  ensure_json_file "$file"
+  node -e '
+const fs = require("fs");
+const [file] = process.argv.slice(1);
+let data = {};
+try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+data.model = { name: "gemini-2.5-flash-lite" };
+fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
+' "$file"
 }
 
 set_toml_root_key() {
@@ -94,38 +106,73 @@ echo ""
 echo "Checking prerequisites..."
 
 MISSING=0
+CLI_MISSING=0
+
+if ! command -v node &> /dev/null; then
+  echo "  ✗ Node.js not found → install Node.js first"
+  MISSING=1
+else
+  echo "  ✓ Node.js ($(node --version 2>/dev/null || echo unknown))"
+fi
+
+if ! command -v npm &> /dev/null; then
+  echo "  ✗ npm not found → install Node.js with npm first"
+  MISSING=1
+else
+  echo "  ✓ npm ($(npm --version 2>/dev/null || echo unknown))"
+fi
+
+if [ $MISSING -eq 1 ]; then
+  echo ""
+  echo "⚠ Install Node.js/npm first, then re-run this script."
+  echo "   macOS: https://nodejs.org/ or brew install node"
+  echo "   Linux/WSL: use your distro package manager, nvm, or https://nodejs.org/"
+  exit 1
+fi
 
 if ! command -v claude &> /dev/null; then
-  echo "  ✗ Claude Code not found → npm install -g @anthropic-ai/claude-code"
-  MISSING=1
+  echo "  ✗ Claude Code not found"
+  CLI_MISSING=1
 else
   echo "  ✓ Claude Code"
 fi
 
 if ! command -v codex &> /dev/null; then
-  echo "  ✗ Codex CLI not found  → npm install -g @openai/codex"
-  MISSING=1
+  echo "  ✗ Codex CLI not found"
+  CLI_MISSING=1
 else
   echo "  ✓ Codex CLI"
 fi
 
 if ! command -v gemini &> /dev/null; then
-  echo "  ✗ Gemini CLI not found → npm install -g @google/gemini-cli"
-  MISSING=1
+  echo "  ✗ Gemini CLI not found"
+  CLI_MISSING=1
 else
   echo "  ✓ Gemini CLI"
 fi
 
-if ! command -v jq &> /dev/null; then
-  echo "  ✗ jq not found        → $(detect_jq_install_cmd)"
-  MISSING=1
-else
-  echo "  ✓ jq"
-fi
-
-if [ $MISSING -eq 1 ]; then
+if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
   echo ""
-  echo "⚠ Install missing tools above, then re-run this script."
+  echo "Installing missing CLIs using official install paths..."
+
+  if ! command -v claude &> /dev/null; then
+    echo "  → Installing Claude Code via official native installer"
+    curl -fsSL https://claude.ai/install.sh | bash
+  fi
+
+  if ! command -v codex &> /dev/null; then
+    echo "  → Installing Codex CLI via npm"
+    npm install -g @openai/codex
+  fi
+
+  if ! command -v gemini &> /dev/null; then
+    echo "  → Installing Gemini CLI via npm"
+    npm install -g @google/gemini-cli
+  fi
+elif [ $CLI_MISSING -eq 1 ]; then
+  echo ""
+  echo "⚠ CLI auto-install skipped because FRUGAL_SKIP_CLI_INSTALL=1."
+  echo "   Install missing tools manually, then re-run this script."
   exit 1
 fi
 
@@ -196,7 +243,7 @@ echo "  ✓ Slash commands registered → $COMMANDS_DIR"
 SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
-for s in usage.sh usage-statusline.sh lib-claude-window.sh lib-cost-tracker.sh guard-code-edit.sh; do
+for s in usage.sh usage.js usage-statusline.sh guard-code-edit.sh; do
   curl -fsSL "$REPO_RAW/scripts/$s" -o "$SCRIPTS_DIR/$s"
   chmod +x "$SCRIPTS_DIR/$s"
 done
@@ -218,16 +265,10 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 mkdir -p "$HOME/.claude"
 if [ -f "$CLAUDE_SETTINGS" ]; then
   cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
-  tmp=$(mktemp)
-  jq --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
-     --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
-     '.statusLine = {type: "command", command: $cmd} | .model = "sonnet" | .hooks.PreToolUse = [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]' \
-     "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
-else
-  jq -n --arg cmd "bash $SCRIPTS_DIR/usage-statusline.sh" \
-     --arg gcmd "bash $SCRIPTS_DIR/guard-code-edit.sh" \
-     '{statusLine: {type: "command", command: $cmd}, model: "sonnet", hooks: {PreToolUse: [{matcher: "Edit|Write|NotebookEdit", hooks: [{type: "command", command: $gcmd}]}]}}' > "$CLAUDE_SETTINGS"
 fi
+set_claude_settings "$CLAUDE_SETTINGS" \
+  "bash $SCRIPTS_DIR/usage-statusline.sh" \
+  "bash $SCRIPTS_DIR/guard-code-edit.sh"
 echo "  ✓ Claude Code model: sonnet (Opus recommended only for complex plans)"
 echo "  ✓ PreToolUse hook installed: guard-code-edit.sh"
 
@@ -253,11 +294,8 @@ GEMINI_SETTINGS="$HOME/.gemini/settings.json"
 mkdir -p "$HOME/.gemini"
 if [ -f "$GEMINI_SETTINGS" ]; then
   cp "$GEMINI_SETTINGS" "${GEMINI_SETTINGS}${BACKUP_SUFFIX}"
-  tmp=$(mktemp)
-  jq '.model = {name: "gemini-2.5-flash-lite"}' "$GEMINI_SETTINGS" > "$tmp" && mv "$tmp" "$GEMINI_SETTINGS"
-else
-  jq -n '{model: {name: "gemini-2.5-flash-lite"}}' > "$GEMINI_SETTINGS"
 fi
+set_gemini_settings "$GEMINI_SETTINGS"
 echo "  ✓ Gemini default model: gemini-2.5-flash-lite"
 
 echo "✅ frugal-harness installed!"

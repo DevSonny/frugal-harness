@@ -10,11 +10,21 @@
 #   0  allow the tool call
 #   2  block the tool call; stderr is delivered to Claude as error context
 
-if ! command -v jq >/dev/null 2>&1; then
+if ! command -v node >/dev/null 2>&1; then
   exit 0
 fi
 
-path=$(jq -r '.tool_input.file_path // empty' 2>/dev/null)
+path=$(node -e '
+let input = "";
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (chunk) => { input += chunk; });
+process.stdin.on("end", () => {
+  try {
+    const payload = JSON.parse(input);
+    process.stdout.write((payload.tool_input && payload.tool_input.file_path) || "");
+  } catch {}
+});
+' 2>/dev/null)
 [ -z "$path" ] && exit 0
 
 case "$path" in

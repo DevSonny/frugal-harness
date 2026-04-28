@@ -40,28 +40,35 @@ Claude does not normally edit code directly. Code implementation and code review
 
 ## Prerequisites
 
-### 1. Claude Code
+### 1. Node.js and npm
+
+frugal-harness uses Node.js to parse local JSON/JSONL usage files without requiring `jq`. The Codex and Gemini official install paths also use npm.
+
+Install Node.js first if you do not already have it:
 
 ```bash
-npm install -g @anthropic-ai/claude-code
+# macOS
+brew install node
+
+# Ubuntu/Debian/WSL
+sudo apt install nodejs npm
+```
+
+### 2. Agent CLIs
+
+The installer can install missing CLIs automatically using official install paths:
+
+| CLI | Install path used by frugal-harness |
+|---|---|
+| Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` |
+| Codex CLI | `npm install -g @openai/codex` |
+| Gemini CLI | `npm install -g @google/gemini-cli` |
+
+After installation, log in:
+
+```bash
 claude login
-```
-
-The baseline assumes **Claude Pro ($20/mo)**.
-
-### 2. Codex CLI
-
-```bash
-npm install -g @openai/codex
 codex login
-```
-
-The baseline assumes **ChatGPT Plus ($20/mo)**.
-
-### 3. Gemini CLI
-
-```bash
-npm install -g @google/gemini-cli
 ```
 
 Gemini CLI needs an API key.
@@ -73,18 +80,6 @@ gemini -p 'say hi'
 
 Get a free key at <https://aistudio.google.com/apikey>.
 
-### 4. jq
-
-The `usage` dashboard and installer use `jq` for JSON handling.
-
-```bash
-# macOS
-brew install jq
-
-# Ubuntu/Debian
-sudo apt install jq
-```
-
 ## Install
 
 ```bash
@@ -93,6 +88,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 The installer configures:
 
+- missing Claude/Codex/Gemini CLIs using official install paths
 - Claude Code default model: `sonnet`
 - Codex default model: `gpt-5.5`
 - Codex reasoning: planning `high`, implementation `medium`
@@ -102,6 +98,8 @@ The installer configures:
 - Claude Code statusline with remaining quota and current session cost
 - a PreToolUse guard that blocks Claude from editing source files directly
 - `~/.codex/AGENTS.md` for Codex standalone fallback
+
+Set `FRUGAL_SKIP_CLI_INSTALL=1` before running the installer if you want it to only check for missing CLIs and never install them.
 
 No manual `/model` command is needed for normal work. For complex planning, Claude recommends Opus and only switches after user approval.
 
@@ -231,6 +229,8 @@ Inside Claude Code, run it through the shell:
 ```
 
 `usage` shows Claude, Codex, and Gemini usage in one place.
+
+The dashboard is powered by Node.js and does not require `jq`. Codex usage is selected from the newest `token_count` event across all local rollout logs, not from the newest file timestamp.
 
 ## Uninstall
 

@@ -127,3 +127,20 @@
 ### 미해결/주의
 - 현재 Codex 샌드박스에서 `.git/index.lock` 및 ref lock 파일 생성이 `Operation not permitted`로 막혀 일반 `git add`/`git commit`은 실패
 - 임시 index/object directory로 commit object 생성은 가능했으나, `git push`는 `Could not resolve host: github.com`로 실패
+
+## 2026-04-28 — usage Node 전환 및 자동 CLI 설치 정책
+
+### 완료된 작업
+- usage 대시보드를 jq/Bash JSON 파싱에서 Node.js 기반 scripts/usage.js로 전환
+- Codex 사용량 선택 기준을 rollout 파일 mtime이 아니라 최신 token_count 이벤트 timestamp로 변경
+- scripts/usage.sh와 scripts/usage-statusline.sh를 Node wrapper로 축소
+- install.sh에서 jq prerequisite를 제거하고 Node/npm 필수 확인으로 변경
+- installer가 누락된 Claude/Codex/Gemini CLI를 공식 설치 경로로 자동 설치하도록 변경
+- uninstall.sh와 guard-code-edit.sh의 JSON 처리를 jq에서 Node로 변경
+- 원격의 statusline 세션 비용 기능을 scripts/usage.js에 통합해 2줄 출력 유지
+
+### 주요 결정
+- curl | bash 하네스 설치 방식은 유지
+- CLI 설치는 공식 하이브리드: Claude는 공식 native curl installer, Codex/Gemini은 npm
+- FRUGAL_SKIP_CLI_INSTALL=1로 CLI 자동 설치를 건너뛸 수 있음
+- scripts/lib-claude-window.sh와 scripts/lib-cost-tracker.sh 기능은 Node 파서로 흡수

@@ -64,10 +64,18 @@ fi
 
 # Remove PreToolUse hook from Claude settings
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
-if [ -f "$CLAUDE_SETTINGS" ] && command -v jq >/dev/null 2>&1; then
+if [ -f "$CLAUDE_SETTINGS" ] && command -v node >/dev/null 2>&1; then
   cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
-  tmp=$(mktemp)
-  jq "del(.hooks.PreToolUse)" "$CLAUDE_SETTINGS" > "$tmp" && mv "$tmp" "$CLAUDE_SETTINGS"
+  node -e '
+const fs = require("fs");
+const [file] = process.argv.slice(1);
+let data = {};
+try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
+if (data.hooks && typeof data.hooks === "object") {
+  delete data.hooks.PreToolUse;
+}
+fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
+' "$CLAUDE_SETTINGS"
   echo "  ↩ Removed PreToolUse hook from $CLAUDE_SETTINGS"
 fi
 
