@@ -20,9 +20,14 @@ When Claude hands off a plan:
 
 ## Reasoning
 - Implementation default: `model_reasoning_effort = "medium"`.
-- Planning default: `plan_mode_reasoning_effort = "high"`.
+- Planning default: `plan_mode_reasoning_effort = "medium"`.
 - When Claude hands off a concrete plan, keep implementation at `medium` unless the plan is incomplete or contradictory.
-- In standalone mode, use the shared Model Auto-Routing Criteria before planning. If the plan is complex enough that `high` is likely to produce an over-fragmented or fragile plan, stop before implementation and recommend rerunning the planning step with:
+- In standalone mode, use the shared Model Auto-Routing Criteria before planning. Standard planning stays on `medium`.
+- If a standalone request is high-complexity planning work, stop before implementation and recommend rerunning the planning step with:
+
+`codex -c 'plan_mode_reasoning_effort="high"'`
+
+- If the work is extremely complex, or a `high` plan is still likely to be over-fragmented or fragile, recommend rerunning with:
 
 `codex -c 'plan_mode_reasoning_effort="xhigh"'`
 

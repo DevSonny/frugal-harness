@@ -144,3 +144,16 @@
 - CLI 설치는 공식 하이브리드: Claude는 공식 native curl installer, Codex/Gemini은 npm
 - FRUGAL_SKIP_CLI_INSTALL=1로 CLI 자동 설치를 건너뛸 수 있음
 - scripts/lib-claude-window.sh와 scripts/lib-cost-tracker.sh 기능은 Node 파서로 흡수
+
+## 2026-05-07 — Codex planning effort 기본값 조정
+
+### 완료된 작업
+- Codex 기본 planning effort를 high에서 medium으로 낮추는 정책으로 정리
+- Codex standalone 복잡도 escalation을 medium → high → xhigh 추천 흐름으로 문서화
+- shared/harness-core.md에 Claude Opus 추천과 Codex high/xhigh 추천이 같은 복잡도 기준을 공유한다고 명시
+- README.md / README.ko.md와 install.sh 문구를 plan medium / implementation medium으로 동기화
+
+### 주요 결정
+- 구현 기본값은 계속 medium
+- Codex 단독 모드에서 복잡한 plan은 자동 전환이 아니라 high 또는 xhigh 재실행 명령을 추천
+- Claude Code의 복잡 planning Opus 추천 정책은 유지

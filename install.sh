@@ -282,8 +282,8 @@ else
 fi
 set_toml_root_key "$CODEX_CONFIG" "model" "gpt-5.5"
 set_toml_root_key "$CODEX_CONFIG" "model_reasoning_effort" "medium"
-set_toml_root_key "$CODEX_CONFIG" "plan_mode_reasoning_effort" "high"
-echo "  ✓ Codex default model: gpt-5.5 (plan high, implementation medium)"
+set_toml_root_key "$CODEX_CONFIG" "plan_mode_reasoning_effort" "medium"
+echo "  ✓ Codex default model: gpt-5.5 (plan medium, implementation medium)"
 
 # Build Codex standalone harness
 "$SYNC_SCRIPT"

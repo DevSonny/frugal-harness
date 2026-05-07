@@ -33,7 +33,7 @@ This keeps Claude session quota out of routine code editing and uses each tool w
 | Tool | Model/settings | Role |
 |---|---|---|
 | Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration |
-| Codex CLI | `gpt-5.5`, plan `high`, implementation `medium` | Implementation, code review, commit, push |
+| Codex CLI | `gpt-5.5`, plan `medium`, implementation `medium` | Implementation, code review, commit, push |
 | Gemini CLI | `gemini-2.5-flash-lite`, free 1,000 req/day | README, changelog, API docs, long-form writing |
 
 Claude does not normally edit code directly. Code implementation and code review belong to Codex.
@@ -91,7 +91,7 @@ The installer configures:
 - missing Claude/Codex/Gemini CLIs using official install paths
 - Claude Code default model: `sonnet`
 - Codex default model: `gpt-5.5`
-- Codex reasoning: planning `high`, implementation `medium`
+- Codex reasoning: planning `medium`, implementation `medium`
 - Gemini default model: `gemini-2.5-flash-lite`
 - the `usage` command
 - Claude Code slash commands under `~/.claude/commands`
@@ -148,8 +148,9 @@ The default rule is to use the cheapest capable path, then escalate only when pl
 
 - Normal planning and orchestration: Claude Sonnet
 - Complex planning: Claude recommends Opus, then waits for user approval
-- Codex standalone planning: `plan_mode_reasoning_effort = "high"`
+- Codex standalone planning: `plan_mode_reasoning_effort = "medium"`
 - Codex implementation: `model_reasoning_effort = "medium"`
+- Complex Codex standalone planning: recommend rerunning with `high`
 - Very complex Codex standalone planning: recommend rerunning with `xhigh`
 
 A task counts as complex planning when it likely involves:

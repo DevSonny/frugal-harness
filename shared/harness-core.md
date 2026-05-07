@@ -20,6 +20,7 @@ These rules apply no matter which agent is running the task.
 
 ## Model Auto-Routing Criteria
 Use the cheapest capable path by default, and only raise planning effort when the request actually needs it.
+These criteria apply to both Claude's Opus recommendation and Codex standalone `high`/`xhigh` planning recommendations.
 
 Treat a task as high-complexity planning work when any of these apply:
 - 10 or more files are likely to change.
