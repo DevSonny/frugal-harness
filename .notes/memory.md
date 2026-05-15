@@ -157,3 +157,21 @@
 - 구현 기본값은 계속 medium
 - Codex 단독 모드에서 복잡한 plan은 자동 전환이 아니라 high 또는 xhigh 재실행 명령을 추천
 - Claude Code의 복잡 planning Opus 추천 정책은 유지
+
+## 2026-05-15 — codex exec stdin 대기 문제 수정
+
+### 원인
+Claude Code Bash 도구에서 `codex exec`를 실행하면 subprocess stdin이 파이프로 연결됨. Codex CLI가 파이프된 stdin을 감지하면 "Reading additional input from stdin..."을 출력하며 추가 입력을 기다려 간헐적으로 멈춤.
+
+### 해결
+`codex exec "..." < /dev/null` — stdin을 즉시 EOF로 닫아 대기 없이 실행. "Reading additional input from stdin..." 메시지는 여전히 출력되지만 멈추지 않음.
+
+### 수정 파일
+- `CLAUDE.md` (설치 시 `~/.claude/CLAUDE.md`로 배포): Delegation 섹션 모든 `codex exec` 예시에 `< /dev/null` 추가
+- `scripts/guard-code-edit.sh` line 48: 힌트 메시지에 `< /dev/null` 추가
+
+### 검증
+- `bash -n install.sh uninstall.sh scripts/*.sh` 통과
+- `git diff --check` 통과
+- `scripts/guard-code-edit.sh`는 `.js` 파일 차단 시 exit 2와 `< /dev/null` 힌트를 출력하고, `.md` 파일은 허용함
+- README.md / README.ko.md에는 `codex exec` 예시가 없어 변경 불필요

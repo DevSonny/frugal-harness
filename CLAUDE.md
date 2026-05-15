@@ -19,10 +19,10 @@ Before writing a plan, apply the shared Model Auto-Routing Criteria:
 Opus is for high-value planning only, not for direct implementation. Never switch to Opus or higher-cost planning without user approval.
 
 ## Delegation
-- Implementation and bug fixes: `codex exec "<path + stack + done-criteria>"` via Bash.
-- Review, commit message, commit, and push: `codex exec` (Codex writes its own commit message).
+- Implementation and bug fixes: `codex exec "<path + stack + done-criteria>" < /dev/null` via Bash.
+- Review, commit message, commit, and push: `codex exec "..." < /dev/null` (Codex writes its own commit message).
 - Docs, READMEs, changelogs, and inline comments: Gemini CLI first (`gemini -p`), then Codex, then Claude only as the final fallback.
-- Web search and research: `codex exec "<research question + what to report>"` first — Codex has web search capability and preserves Claude's context budget. Claude may do a quick web lookup only when Codex is unavailable or the answer is trivially found without browsing.
+- Web search and research: `codex exec "<research question + what to report>" < /dev/null` first — Codex has web search capability and preserves Claude's context budget. Claude may do a quick web lookup only when Codex is unavailable or the answer is trivially found without browsing.
 
 ## Workflow Order
 Natural language is the primary interface. Slash commands are optional shortcuts for:
@@ -34,7 +34,7 @@ Regardless of active Claude model (Opus/Sonnet/Haiku):
 - Do not use Edit/Write/NotebookEdit on source files. `guard-code-edit.sh` blocks them with exit 2.
 - Blocked extensions: `.ts .tsx .js .jsx .mjs .cjs .vue .svelte .astro .css .scss .sass .less .py .rb .php .go .rs .java .kt .swift .dart .cs .fs .scala .ex .exs .lua .nix .r .R .jl .c .h .cpp .hpp .sh .bash .zsh .sql`.
 - Allowed direct edits: `.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore, plan files.
-- On hook block: read stderr, then immediately run `codex exec "..."` with the full path, stack, and done criteria.
+- On hook block: read stderr, then immediately run `codex exec "..." < /dev/null` with the full path, stack, and done criteria.
 
 ## Fallback
 - If Codex or Gemini quota is exhausted and Claude is still available, Claude may temporarily substitute only after a manual `usage` check and explicit user approval for the affected stage.

@@ -45,7 +45,7 @@ regardless of which Claude model is active (Opus, Sonnet, Haiku).
 
 Do NOT retry Edit/Write on this file. Instead, run:
 
-  codex exec "<task description with file path, tech stack, and acceptance criteria>"
+  codex exec "<task description with file path, tech stack, and acceptance criteria>" < /dev/null
 
 Allowed direct edits (not blocked): .md .json .toml .yml .yaml .txt, Dockerfile, .gitignore, plan files.
 EOF
