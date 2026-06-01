@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 detect_shell() {
   case "${SHELL:-}" in
     */zsh)  echo "zsh" ;;
@@ -53,19 +55,6 @@ fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
 ' "$file" "$status_cmd" "$guard_cmd"
 }
 
-set_antigravity_settings() {
-  local file="$1"
-
-  ensure_json_file "$file"
-  node -e '
-const fs = require("fs");
-const [file] = process.argv.slice(1);
-let data = {};
-try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
-data.model = { name: "gemini-3.5-flash" }; // Update model if necessary
-fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
-' "$file"
-}
 
 set_toml_root_key() {
   local file="$1"
@@ -144,12 +133,6 @@ else
   echo "  ✓ Codex CLI"
 fi
 
-if ! command -v agy &> /dev/null; then
-  echo "  ✗ Antigravity CLI not found"
-  CLI_MISSING=1
-else
-  echo "  ✓ Antigravity CLI"
-fi
 
 if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
   echo ""
@@ -165,10 +148,6 @@ if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
     npm install -g @openai/codex
   fi
 
-  if ! command -v agy &> /dev/null; then
-    echo "  → Installing Antigravity CLI via native installer"
-    curl -fsSL https://antigravity.google/cli/install.sh | bash
-  fi
 elif [ $CLI_MISSING -eq 1 ]; then
   echo ""
   echo "⚠ CLI auto-install skipped because FRUGAL_SKIP_CLI_INSTALL=1."
@@ -244,7 +223,11 @@ SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
 for s in usage.sh usage.js usage-statusline.sh guard-code-edit.sh; do
-  curl -fsSL "$REPO_RAW/scripts/$s" -o "$SCRIPTS_DIR/$s"
+  if [ -f "$SCRIPT_DIR/scripts/$s" ]; then
+    cp "$SCRIPT_DIR/scripts/$s" "$SCRIPTS_DIR/$s"
+  else
+    curl -fsSL "$REPO_RAW/scripts/$s" -o "$SCRIPTS_DIR/$s"
+  fi
   chmod +x "$SCRIPTS_DIR/$s"
 done
 ln -sf "$SCRIPTS_DIR/usage.sh" "$BIN_DIR/usage"
@@ -289,30 +272,15 @@ echo "  ✓ Codex default model: gpt-5.5 (plan medium, implementation medium)"
 "$SYNC_SCRIPT"
 echo "  ✓ Codex AGENTS.md generated"
 
-# Pin Antigravity default model
-ANTIGRAVITY_SETTINGS="$HOME/.gemini/antigravity-cli/settings.json"
-mkdir -p "$HOME/.gemini/antigravity-cli"
-if [ -f "$ANTIGRAVITY_SETTINGS" ]; then
-  cp "$ANTIGRAVITY_SETTINGS" "${ANTIGRAVITY_SETTINGS}${BACKUP_SUFFIX}"
-fi
-set_antigravity_settings "$ANTIGRAVITY_SETTINGS"
-echo "  ✓ Antigravity default model configured"
 
 echo "✅ frugal-harness installed!"
 echo ""
-echo "🔑 Authentication Setup:"
-echo "   Run the following command to login to your Antigravity subscription:"
-echo "     agy login"
-echo ""
-echo "   Verify your login with:"
-echo "     agy -p 'say hi'"
 echo ""
 echo "Agents & models:"
 echo "  /plan    → Claude Code  sonnet               (recommend Opus only for complex plans)"
 echo "  /exec    → Codex CLI    gpt-5.5              (build, medium effort)"
 echo "  /review  → Codex CLI    gpt-5.5              (review, medium effort)"
-echo "  /docs    → Antigravity CLI  (docs)"
+echo "  /docs    → Gemini CLI   (not configured)"
 echo "  /ship    → Codex CLI    gpt-5.5              (commit & push, medium effort)"
 echo ""
 echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
-echo "Antigravity CLI: configured"
