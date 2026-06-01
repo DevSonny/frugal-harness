@@ -10,6 +10,8 @@ const STATUSLINE = argv.has("--statusline");
 
 const CLAUDE_SESSION_LIMIT = intEnv("CLAUDE_SESSION_LIMIT", 475);
 const CLAUDE_WEEKLY_LIMIT = intEnv("CLAUDE_WEEKLY_LIMIT", 2700);
+const CLAUDE_SESSION_OUT_LIMIT = intEnv("CLAUDE_SESSION_OUT_LIMIT", 500000);
+const CLAUDE_WEEKLY_OUT_LIMIT = intEnv("CLAUDE_WEEKLY_OUT_LIMIT", 3000000);
 
 const C = {
   gn: "\x1b[32m",
@@ -159,8 +161,8 @@ function claudeStats() {
     });
   }
 
-  stats.sLeft = 100 - Math.min(100, Math.floor((stats.sMsgs * 100) / CLAUDE_SESSION_LIMIT));
-  stats.wLeft = 100 - Math.min(100, Math.floor((stats.wMsgs * 100) / CLAUDE_WEEKLY_LIMIT));
+  stats.sLeft = 100 - Math.min(100, Math.floor((stats.sOut * 100) / CLAUDE_SESSION_OUT_LIMIT));
+  stats.wLeft = 100 - Math.min(100, Math.floor((stats.wOut * 100) / CLAUDE_WEEKLY_OUT_LIMIT));
   return stats;
 }
 
@@ -197,11 +199,6 @@ function codexStats() {
   };
 }
 
-function antigravityStats() {
-  const settings = readJson(path.join(HOME, ".gemini", "antigravity-cli", "settings.json"), {});
-  const model = settings && settings.model && settings.model.name ? settings.model.name : "unknown";
-  return { model };
-}
 
 function costFromTokens(input, cached, cacheCreation, output, inputRate, cachedRate, cacheCreationRate, outputRate) {
   const cost =
@@ -240,9 +237,6 @@ function codexSessionCost(codex) {
   return costFromTokens(uncached, cached, 0, output, 5.0, 0.5, 0, 30.0);
 }
 
-function latestAntigravitySessionCost() {
-  return 0; // Handled internally
-}
 
 function gitBranch(cwd) {
   if (!cwd) return "";
@@ -277,18 +271,16 @@ function printDashboard() {
   const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const claude = claudeStats();
   const codex = codexStats();
-  const antigravity = antigravityStats();
-
   console.log(line);
   console.log(` CLI USAGE  (${nowStr})`);
   console.log(line);
   console.log(`${C.cy}Claude Code${C.rs}  ${C.dm}(rolling window from project JSONL)${C.rs}`);
-  console.log(`   Session 5h: ${bar(claude.sLeft)}  ${colorPct(claude.sLeft)}${claude.sLeft}%${C.rs} left  (${claude.sMsgs}/${CLAUDE_SESSION_LIMIT} msgs used)`);
-  console.log(`   Weekly 7d:  ${bar(claude.wLeft)}  ${colorPct(claude.wLeft)}${claude.wLeft}%${C.rs} left  (${claude.wMsgs}/${CLAUDE_WEEKLY_LIMIT} msgs used)`);
+  console.log(`   Session 5h: ${bar(claude.sLeft)}  ${colorPct(claude.sLeft)}${claude.sLeft}%${C.rs} left  (${claude.sMsgs} msgs / ${fmtK(claude.sOut)} out tokens)`);
+  console.log(`   Weekly 7d:  ${bar(claude.wLeft)}  ${colorPct(claude.wLeft)}${claude.wLeft}%${C.rs} left  (${claude.wMsgs} msgs / ${fmtK(claude.wOut)} out tokens)`);
   console.log(`   Tokens 5h:   in ${fmtK(claude.sIn)} / out ${fmtK(claude.sOut)}`);
   console.log(`   Tokens 7d:   in ${fmtK(claude.wIn)} / out ${fmtK(claude.wOut)}`);
-  console.log(`   ${C.dm}Limits (approx): session=${CLAUDE_SESSION_LIMIT} msgs / week=${CLAUDE_WEEKLY_LIMIT} msgs.${C.rs}`);
-  console.log(`   ${C.dm}Calibrate: CLAUDE_SESSION_LIMIT=N CLAUDE_WEEKLY_LIMIT=N usage${C.rs}`);
+  console.log(`   ${C.dm}Limits (approx): session=${fmtK(CLAUDE_SESSION_OUT_LIMIT)} / week=${fmtK(CLAUDE_WEEKLY_OUT_LIMIT)} out tokens (env: CLAUDE_SESSION_OUT_LIMIT/CLAUDE_WEEKLY_OUT_LIMIT).${C.rs}`);
+  console.log(`   ${C.dm}Calibrate: CLAUDE_SESSION_OUT_LIMIT=N CLAUDE_WEEKLY_OUT_LIMIT=N usage${C.rs}`);
 
   console.log("");
   if (codex) {
@@ -299,9 +291,6 @@ function printDashboard() {
     console.log(`${C.cy}Codex CLI${C.rs}  ${C.dm}(no rate_limits data found)${C.rs}`);
   }
 
-  console.log("");
-  console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.dm}(${antigravity.model})${C.rs}`);
-  console.log(`   Usage tracking is handled internally by Antigravity.`);
   console.log(line);
 }
 
@@ -314,8 +303,6 @@ function printStatusline() {
   const branch = gitBranch(cwd);
   const claude = claudeStats();
   const codex = codexStats();
-  const antigravity = antigravityStats();
-
   const parts = [];
   if (projectDir) parts.push(`${C.cy}${path.basename(projectDir)}${C.rs}`);
   if (modelName) parts.push(`${C.mg}${modelName}${C.rs}`);
@@ -326,15 +313,11 @@ function printStatusline() {
   } else {
     parts.push(`${C.dm}Codex${C.rs} ?`);
   }
-  parts.push(`${C.dm}Antigravity${C.rs} active`);
   console.log(parts.join("  "));
 
   const claudeCost = claudeSessionCost(transcriptPath);
   const codexCost = codexSessionCost(codex);
-  const totalCost =
-    claudeCost === null || codexCost === null
-      ? null
-      : claudeCost + codexCost;
+  const totalCost = claudeCost !== null ? claudeCost + (codexCost ?? 0) : null;
   console.log(
     `  Claude ${C.yl}${formatCost(claudeCost)}${C.rs}  ` +
       `Codex ${C.yl}${formatCost(codexCost)}${C.rs}  ` +
