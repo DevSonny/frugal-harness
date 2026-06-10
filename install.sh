@@ -53,7 +53,7 @@ fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
 ' "$file" "$status_cmd" "$guard_cmd"
 }
 
-set_gemini_settings() {
+set_antigravity_settings() {
   local file="$1"
 
   ensure_json_file "$file"
@@ -62,7 +62,7 @@ const fs = require("fs");
 const [file] = process.argv.slice(1);
 let data = {};
 try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
-data.model = { name: "gemini-2.5-flash-lite" };
+data.model = { name: "gemini-3.5-flash" }; // Update model if necessary
 fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
 ' "$file"
 }
@@ -144,11 +144,11 @@ else
   echo "  ✓ Codex CLI"
 fi
 
-if ! command -v gemini &> /dev/null; then
-  echo "  ✗ Gemini CLI not found"
+if ! command -v agy &> /dev/null; then
+  echo "  ✗ Antigravity CLI not found"
   CLI_MISSING=1
 else
-  echo "  ✓ Gemini CLI"
+  echo "  ✓ Antigravity CLI"
 fi
 
 if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
@@ -165,9 +165,9 @@ if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
     npm install -g @openai/codex
   fi
 
-  if ! command -v gemini &> /dev/null; then
-    echo "  → Installing Gemini CLI via npm"
-    npm install -g @google/gemini-cli
+  if ! command -v agy &> /dev/null; then
+    echo "  → Installing Antigravity CLI via native installer"
+    curl -fsSL https://antigravity.google/cli/install.sh | bash
   fi
 elif [ $CLI_MISSING -eq 1 ]; then
   echo ""
@@ -270,7 +270,7 @@ set_claude_settings "$CLAUDE_SETTINGS" \
   "bash $SCRIPTS_DIR/usage-statusline.sh" \
   "bash $SCRIPTS_DIR/guard-code-edit.sh"
 echo "  ✓ Claude Code model: sonnet (Opus recommended only for complex plans)"
-echo "  ✓ PreToolUse hook installed: guard-code-edit.sh"
+echo "  ✓ PreToolUse hook installed: guard-code-edit.sh (guiding, not blocking)"
 
 # Pin Codex defaults
 CODEX_CONFIG="$HOME/.codex/config.toml"
@@ -289,62 +289,30 @@ echo "  ✓ Codex default model: gpt-5.5 (plan medium, implementation medium)"
 "$SYNC_SCRIPT"
 echo "  ✓ Codex AGENTS.md generated"
 
-# Pin Gemini default model to gemini-2.5-flash-lite (cheapest)
-GEMINI_SETTINGS="$HOME/.gemini/settings.json"
-mkdir -p "$HOME/.gemini"
-if [ -f "$GEMINI_SETTINGS" ]; then
-  cp "$GEMINI_SETTINGS" "${GEMINI_SETTINGS}${BACKUP_SUFFIX}"
+# Pin Antigravity default model
+ANTIGRAVITY_SETTINGS="$HOME/.gemini/antigravity-cli/settings.json"
+mkdir -p "$HOME/.gemini/antigravity-cli"
+if [ -f "$ANTIGRAVITY_SETTINGS" ]; then
+  cp "$ANTIGRAVITY_SETTINGS" "${ANTIGRAVITY_SETTINGS}${BACKUP_SUFFIX}"
 fi
-set_gemini_settings "$GEMINI_SETTINGS"
-echo "  ✓ Gemini default model: gemini-2.5-flash-lite"
+set_antigravity_settings "$ANTIGRAVITY_SETTINGS"
+echo "  ✓ Antigravity default model configured"
 
 echo "✅ frugal-harness installed!"
 echo ""
-echo "🔑 API Key Setup (do this manually):"
-echo "   Get your key: https://aistudio.google.com/apikey"
+echo "🔑 Authentication Setup:"
+echo "   Run the following command to login to your Antigravity subscription:"
+echo "     agy login"
 echo ""
-_detected_shell="$(detect_shell)"
-_detected_rc="$(rcfile_for_shell "$_detected_shell")"
-case "$_detected_shell" in
-  zsh)
-    echo "   Detected: zsh"
-    echo "   echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> $_detected_rc"
-    echo "   source $_detected_rc"
-    ;;
-  bash)
-    echo "   Detected: bash"
-    echo "   echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> $_detected_rc"
-    echo "   source $_detected_rc"
-    ;;
-  fish)
-    echo "   Detected: fish"
-    echo "   set -Ux GEMINI_API_KEY \"your_api_key_here\""
-    ;;
-  *)
-    echo "   Could not detect shell (SHELL=${SHELL:-unset}). Choose your config file:"
-    echo ""
-    echo "   zsh:"
-    echo "     echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.zshrc && source ~/.zshrc"
-    echo "   bash (Linux):"
-    echo "     echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.bashrc && source ~/.bashrc"
-    echo "   bash (macOS):"
-    echo "     echo 'export GEMINI_API_KEY=\"your_api_key_here\"' >> ~/.bash_profile && source ~/.bash_profile"
-    echo "   fish:"
-    echo "     set -Ux GEMINI_API_KEY \"your_api_key_here\""
-    ;;
-esac
-echo ""
-echo "   Open a new terminal, then verify:"
-echo "     1) [ -n \"\$GEMINI_API_KEY\" ] && echo 'OK: env var set' || echo 'FAIL: not set'"
-echo "     2) echo \"Key prefix: \${GEMINI_API_KEY:0:6}...\""
-echo "     3) gemini -p 'say hi'   # optional — uses 1 free-tier request"
+echo "   Verify your login with:"
+echo "     agy -p 'say hi'"
 echo ""
 echo "Agents & models:"
 echo "  /plan    → Claude Code  sonnet               (recommend Opus only for complex plans)"
 echo "  /exec    → Codex CLI    gpt-5.5              (build, medium effort)"
 echo "  /review  → Codex CLI    gpt-5.5              (review, medium effort)"
-echo "  /docs    → Gemini CLI   gemini-2.5-flash-lite (free — docs)"
+echo "  /docs    → Antigravity CLI  (docs)"
 echo "  /ship    → Codex CLI    gpt-5.5              (commit & push, medium effort)"
 echo ""
 echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
-echo "Gemini CLI: free"
+echo "Antigravity CLI: configured"

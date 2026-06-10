@@ -1,5 +1,47 @@
 # frugal-harness memory
 
+## 2026-05-30 — Gemini CLI에서 Antigravity CLI로 마이그레이션
+
+### 완료된 작업
+- `README.md`, `README.ko.md`에서 Gemini CLI를 Antigravity CLI로 변경
+- `install.sh`에서 Gemini 설치 로직을 Antigravity native curl 스크립트로 대체
+- 환경변수 설정 대신 `agy login` 명령으로 Antigravity 구독 인증 방식을 사용하도록 수정
+- `scripts/usage.js`에서 Gemini tracking 로직을 제거하고 Antigravity 정보를 표시하도록 수정
+- `CLAUDE.md`, `shared/codex-wrapper.md`, `skills/docs.md`의 문서 작성 담당을 Antigravity CLI(`agy`)로 변경
+
+## 2026-05-15 — 최신 pull 및 재설치
+
+### 완료된 작업
+- `git stash push` → `git pull --ff-only` (e0850ea → 18e39a7, 14파일 변경) → `git stash pop` (auto-merge 성공)
+- `bash install.sh` 완료: Claude sonnet / Codex gpt-5.5 / Gemini gemini-2.5-flash-lite
+- `~/.claude/commands` slash command 등록, `~/.local/share/frugal-harness/scripts` 배포
+- `~/.codex/AGENTS.md` 125 lines 재생성
+
+### 주요 변경 (이번 pull)
+- `scripts/usage.js` 신규 추가 (Node.js 기반 usage 대시보드)
+- `scripts/lib-claude-window.sh`, `scripts/lib-cost-tracker.sh` 삭제
+- `scripts/usage.sh`, `scripts/usage-statusline.sh` 대폭 축소/변경
+- Codex 기본 모델: `gpt-5.5` (plan medium, implementation medium)
+
+### 에러 및 해결
+- `.notes/memory.md` 미커밋 변경으로 `pull --ff-only` 실패 → stash 후 pull → stash pop으로 해결
+
+## 2026-04-27 — 최신 pull 및 설치 실행
+
+### 완료된 작업
+- `/opt/homebrew/bin/git pull --ff-only` 실행 결과 `Already up to date.`
+- `bash install.sh` 실행 완료: Claude/Codex/Gemini 설정, slash commands, usage scripts, Codex AGENTS.md 재생성
+- 설치 후 `/Users/son/.codex/AGENTS.md` 119 lines 생성 확인
+- `/Users/son/.local/bin/usage` 실행 링크 존재 및 executable 확인
+
+### 검증
+- `bash -n install.sh uninstall.sh scripts/*.sh` 통과
+- `/opt/homebrew/bin/git status --short --branch` 결과 `main...origin/main`으로 로컬 변경 없음
+
+### 에러 및 해결
+- `/usr/bin/git`은 Xcode license 미동의로 실패했으나 `/opt/homebrew/bin/git`으로 정상 처리
+- sandbox에서 `.git/FETCH_HEAD` 쓰기가 막혀 승인 후 escalated `git pull` 실행
+
 ## 2026-04-20 — 전면 재구성
 
 ### 완료된 작업

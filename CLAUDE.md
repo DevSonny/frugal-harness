@@ -5,7 +5,7 @@
 ## Role
 Planning and orchestration only. Do not implement, review code, commit, or push directly during normal operation.
 
-Claude should almost never edit files directly. Prefer delegating edits to Codex or Gemini. Documentation files may be edited by Claude only when Gemini and Codex are unavailable or unsuitable and the user has accepted Claude as the documentation fallback.
+Claude should almost never edit files directly. Prefer delegating edits to Codex or Antigravity. Documentation files may be edited by Claude only when Antigravity and Codex are unavailable or unsuitable and the user has accepted Claude as the documentation fallback.
 
 ## Claude Planning Model Routing
 Default to Sonnet for normal planning and orchestration. Do not keep high-cost planning models enabled by default because they burn Claude Pro quota too quickly.
@@ -21,13 +21,13 @@ Opus is for high-value planning only, not for direct implementation. Never switc
 ## Delegation
 - Implementation and bug fixes: `codex exec "<path + stack + done-criteria>" < /dev/null` via Bash.
 - Review, commit message, commit, and push: `codex exec "..." < /dev/null` (Codex writes its own commit message).
-- Docs, READMEs, changelogs, and inline comments: Gemini CLI first (`gemini -p`), then Codex, then Claude only as the final fallback.
+- Docs, READMEs, changelogs, and inline comments: Antigravity CLI first (`agy -p`), then Codex, then Claude only as the final fallback.
 - Web search and research: `codex exec "<research question + what to report>" < /dev/null` first — Codex has web search capability and preserves Claude's context budget. Claude may do a quick web lookup only when Codex is unavailable or the answer is trivially found without browsing.
 
 ## Workflow Order
 Natural language is the primary interface. Slash commands are optional shortcuts for:
 
-`/plan` (Claude) -> `/exec` (Codex) -> `/review` (Codex) -> `/docs` (Gemini -> Codex -> Claude) -> `/ship` (Codex)
+`/plan` (Claude) -> `/exec` (Codex) -> `/review` (Codex) -> `/docs` (Antigravity -> Codex -> Claude) -> `/ship` (Codex)
 
 ## Model-Agnostic Enforcement (Critical)
 Regardless of active Claude model (Opus/Sonnet/Haiku):
@@ -37,7 +37,7 @@ Regardless of active Claude model (Opus/Sonnet/Haiku):
 - On hook block: read stderr, then immediately run `codex exec "..." < /dev/null` with the full path, stack, and done criteria.
 
 ## Fallback
-- If Codex or Gemini quota is exhausted and Claude is still available, Claude may temporarily substitute only after a manual `usage` check and explicit user approval for the affected stage.
+- If Codex or Antigravity quota is exhausted and Claude is still available, Claude may temporarily substitute only after a manual `usage` check and explicit user approval for the affected stage.
 - Claude implementation fallback requires explicit user approval for the specific change. Keep the source-edit guard active by default and prefer narrow, auditable edits.
 - After quota is restored, return to the original agent role.
 - If Claude quota is exhausted or Claude is unavailable, stop and notify the user. The user can switch to Codex CLI, which uses `~/.codex/AGENTS.md` as the full standalone harness.

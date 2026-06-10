@@ -197,36 +197,10 @@ function codexStats() {
   };
 }
 
-function geminiStats() {
-  const settings = readJson(path.join(HOME, ".gemini", "settings.json"), {});
-  const model = settings && settings.model && settings.model.name ? settings.model.name : "gemini-2.5-flash-lite";
-  const today = new Date().toISOString().slice(0, 10);
-  const root = path.join(HOME, ".gemini", "tmp");
-  const stats = { model, calls: 0, today: 0, in: 0, out: 0, cached: 0, todayIn: 0, todayOut: 0 };
-
-  for (const file of walkFiles(root, (f) => f.includes(`${path.sep}chats${path.sep}`) && f.endsWith(".json"))) {
-    const data = readJson(file);
-    if (!data || !Array.isArray(data.messages)) continue;
-    const dateMatch = path.basename(file).match(/\d{4}-\d{2}-\d{2}/);
-    const fileDate = dateMatch ? dateMatch[0] : "";
-    for (const msg of data.messages) {
-      if (!msg || msg.type !== "gemini") continue;
-      const tokens = msg.tokens || {};
-      const input = Number(tokens.input || 0);
-      const output = Number(tokens.output || 0);
-      const cached = Number(tokens.cached || 0);
-      stats.calls += 1;
-      stats.in += input;
-      stats.out += output;
-      stats.cached += cached;
-      if (fileDate === today) {
-        stats.today += 1;
-        stats.todayIn += input;
-        stats.todayOut += output;
-      }
-    }
-  }
-  return stats;
+function antigravityStats() {
+  const settings = readJson(path.join(HOME, ".gemini", "antigravity-cli", "settings.json"), {});
+  const model = settings && settings.model && settings.model.name ? settings.model.name : "unknown";
+  return { model };
 }
 
 function costFromTokens(input, cached, cacheCreation, output, inputRate, cachedRate, cacheCreationRate, outputRate) {
@@ -266,36 +240,8 @@ function codexSessionCost(codex) {
   return costFromTokens(uncached, cached, 0, output, 5.0, 0.5, 0, 30.0);
 }
 
-function latestGeminiSessionCost() {
-  const root = path.join(HOME, ".gemini", "tmp");
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-  let latest = null;
-
-  for (const file of walkFiles(root, (f) => f.includes(`${path.sep}chats${path.sep}`) && path.basename(f).startsWith("session-") && f.endsWith(".json"))) {
-    let stat;
-    try {
-      stat = fs.statSync(file);
-    } catch {
-      continue;
-    }
-    if (stat.mtimeMs < todayStart.getTime()) continue;
-    if (!latest || stat.mtimeMs > latest.mtimeMs) latest = { file, mtimeMs: stat.mtimeMs };
-  }
-
-  if (!latest) return 0;
-  const data = readJson(latest.file);
-  if (!data || !Array.isArray(data.messages)) return 0;
-  const totals = { input: 0, output: 0, cached: 0 };
-  for (const msg of data.messages) {
-    if (!msg || msg.type !== "gemini") continue;
-    const tokens = msg.tokens || {};
-    totals.input += Number(tokens.input || 0);
-    totals.output += Number(tokens.output || 0);
-    totals.cached += Number(tokens.cached || 0);
-  }
-  const uncached = Math.max(0, totals.input - totals.cached);
-  return costFromTokens(uncached, totals.cached, 0, totals.output, 0.1, 0.01, 0, 0.4);
+function latestAntigravitySessionCost() {
+  return 0; // Handled internally
 }
 
 function gitBranch(cwd) {
@@ -331,7 +277,7 @@ function printDashboard() {
   const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const claude = claudeStats();
   const codex = codexStats();
-  const gemini = geminiStats();
+  const antigravity = antigravityStats();
 
   console.log(line);
   console.log(` CLI USAGE  (${nowStr})`);
@@ -354,10 +300,8 @@ function printDashboard() {
   }
 
   console.log("");
-  console.log(`${C.cy}Gemini CLI${C.rs}  ${C.dm}(${gemini.model})${C.rs}`);
-  console.log(`   Today:     ${gemini.today} API calls — in ${fmtK(gemini.todayIn)} / out ${fmtK(gemini.todayOut)}`);
-  console.log(`   All time:  ${gemini.calls} API calls — in ${fmtK(gemini.in)} / out ${fmtK(gemini.out)} / cached ${fmtK(gemini.cached)}`);
-  console.log(`   ${C.dm}(Google quota is server-side only)${C.rs}`);
+  console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.dm}(${antigravity.model})${C.rs}`);
+  console.log(`   Usage tracking is handled internally by Antigravity.`);
   console.log(line);
 }
 
@@ -370,7 +314,7 @@ function printStatusline() {
   const branch = gitBranch(cwd);
   const claude = claudeStats();
   const codex = codexStats();
-  const gemini = geminiStats();
+  const antigravity = antigravityStats();
 
   const parts = [];
   if (projectDir) parts.push(`${C.cy}${path.basename(projectDir)}${C.rs}`);
@@ -382,20 +326,18 @@ function printStatusline() {
   } else {
     parts.push(`${C.dm}Codex${C.rs} ?`);
   }
-  parts.push(`${C.dm}Gemini${C.rs} ${gemini.today} calls today`);
+  parts.push(`${C.dm}Antigravity${C.rs} active`);
   console.log(parts.join("  "));
 
   const claudeCost = claudeSessionCost(transcriptPath);
   const codexCost = codexSessionCost(codex);
-  const geminiCost = latestGeminiSessionCost();
   const totalCost =
-    claudeCost === null || codexCost === null || geminiCost === null
+    claudeCost === null || codexCost === null
       ? null
-      : claudeCost + codexCost + geminiCost;
+      : claudeCost + codexCost;
   console.log(
     `  Claude ${C.yl}${formatCost(claudeCost)}${C.rs}  ` +
       `Codex ${C.yl}${formatCost(codexCost)}${C.rs}  ` +
-      `Gemini ${C.yl}${formatCost(geminiCost)}${C.rs}  ` +
       `\x1b[1;37mTotal ${formatCost(totalCost)}${C.rs}`
   );
 }

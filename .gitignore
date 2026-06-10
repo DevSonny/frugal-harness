@@ -1,5 +1,7 @@
 .claude/
 .codex
 .nvm/
+.DS_Store
+.antigravitycli/
 generated-image.jpg
 generated-image.jpg:Zone.Identifier

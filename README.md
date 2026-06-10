@@ -8,23 +8,23 @@
   <strong>DevSonny</strong>
 </p>
 
-frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Plus, and Gemini CLI so the whole development loop can run without a $100/mo setup.
+frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Plus, and Antigravity CLI so the whole development loop can run without a $100/mo setup.
 
 The core idea is role separation.
 
 - Claude Code plans and orchestrates.
 - Codex CLI implements, reviews code, commits, and pushes.
-- Gemini CLI writes long-form docs such as READMEs, changelogs, and API documentation.
+- Antigravity CLI writes long-form docs such as READMEs, changelogs, and API documentation.
 
 In normal use, you open Claude Code and speak naturally. The harness rules decide which CLI should handle each stage behind the scenes.
 
 ## Why Split The Roles?
 
-Most AI coding setups assume a $100/mo plan. frugal-harness is designed around **Claude Pro ($20/mo)** and **ChatGPT Plus ($20/mo)**, with documentation work delegated to free Gemini CLI.
+Most AI coding setups assume a $100/mo plan. frugal-harness is designed around **Claude Pro ($20/mo)** and **ChatGPT Plus ($20/mo)**, with documentation work delegated to Antigravity CLI.
 
 **Total: $40/mo** as the baseline.
 
-Claude is most efficient when it focuses on planning and orchestration. Codex is better suited for implementation, code review, commits, and pushes. Gemini is useful for long, repetitive documentation tasks.
+Claude is most efficient when it focuses on planning and orchestration. Codex is better suited for implementation, code review, commits, and pushes. Antigravity is useful for long, repetitive documentation tasks.
 
 This keeps Claude session quota out of routine code editing and uses each tool where it is strongest.
 
@@ -34,7 +34,7 @@ This keeps Claude session quota out of routine code editing and uses each tool w
 |---|---|---|
 | Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration |
 | Codex CLI | `gpt-5.5`, plan `medium`, implementation `medium` | Implementation, code review, commit, push |
-| Gemini CLI | `gemini-2.5-flash-lite`, free 1,000 req/day | README, changelog, API docs, long-form writing |
+| Antigravity CLI | default configured | README, changelog, API docs, long-form writing |
 
 Claude does not normally edit code directly. Code implementation and code review belong to Codex.
 
@@ -42,7 +42,7 @@ Claude does not normally edit code directly. Code implementation and code review
 
 ### 1. Node.js and npm
 
-frugal-harness uses Node.js to parse local JSON/JSONL usage files without requiring `jq`. The Codex and Gemini official install paths also use npm.
+frugal-harness uses Node.js to parse local JSON/JSONL usage files without requiring `jq`. The Codex and Antigravity official install paths also use npm or native curl scripts.
 
 Install Node.js first if you do not already have it:
 
@@ -62,7 +62,7 @@ The installer can install missing CLIs automatically using official install path
 |---|---|
 | Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` |
 | Codex CLI | `npm install -g @openai/codex` |
-| Gemini CLI | `npm install -g @google/gemini-cli` |
+| Antigravity CLI | `curl -fsSL https://antigravity.google/cli/install.sh \| bash` |
 
 After installation, log in:
 
@@ -71,14 +71,12 @@ claude login
 codex login
 ```
 
-Gemini CLI needs an API key.
+Antigravity CLI requires you to login with your subscription.
 
 ```bash
-export GEMINI_API_KEY="your-key-here"
-gemini -p 'say hi'
+agy login
+agy -p 'say hi'
 ```
-
-Get a free key at <https://aistudio.google.com/apikey>.
 
 ## Install
 
@@ -88,11 +86,11 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 The installer configures:
 
-- missing Claude/Codex/Gemini CLIs using official install paths
+- missing Claude/Codex/Antigravity CLIs using official install paths
 - Claude Code default model: `sonnet`
 - Codex default model: `gpt-5.5`
 - Codex reasoning: planning `medium`, implementation `medium`
-- Gemini default model: `gemini-2.5-flash-lite`
+- Antigravity default model configured
 - the `usage` command
 - Claude Code slash commands under `~/.claude/commands`
 - Claude Code statusline with remaining quota and current session cost
@@ -124,7 +122,7 @@ Slash commands are optional shortcuts.
 | `/plan` | Break down work and call out risks | Claude |
 | `/exec` | Implement | Codex |
 | `/review` | Review code | Codex |
-| `/docs` | Write or update docs | Gemini (→ Codex if exhausted → Claude last resort) |
+| `/docs` | Write or update docs | Antigravity (→ Codex if exhausted → Claude last resort) |
 | `/ship` | Verify, commit, and push | Codex |
 
 Plain language follows the same routing.
@@ -140,7 +138,7 @@ Claude does not normally edit code directly.
 
 If Codex quota is exhausted and Claude needs to act as an implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
 
-Documentation goes to Gemini first. If Gemini fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
+Documentation goes to Antigravity first. If Antigravity fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
 
 ## Model Routing
 
@@ -229,7 +227,7 @@ Inside Claude Code, run it through the shell:
 ! usage
 ```
 
-`usage` shows Claude, Codex, and Gemini usage in one place.
+`usage` shows Claude, Codex, and Antigravity usage in one place.
 
 The dashboard is powered by Node.js and does not require `jq`. Codex usage is selected from the newest `token_count` event across all local rollout logs, not from the newest file timestamp.
 
