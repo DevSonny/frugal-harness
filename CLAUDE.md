@@ -31,10 +31,10 @@ Natural language is the primary interface. Slash commands are optional shortcuts
 
 ## Model-Agnostic Enforcement (Critical)
 Regardless of active Claude model (Opus/Sonnet/Haiku):
-- Do not use Edit/Write/NotebookEdit on source files. `guard-code-edit.sh` blocks them with exit 2.
-- Blocked extensions: `.ts .tsx .js .jsx .mjs .cjs .vue .svelte .astro .css .scss .sass .less .py .rb .php .go .rs .java .kt .swift .dart .cs .fs .scala .ex .exs .lua .nix .r .R .jl .c .h .cpp .hpp .sh .bash .zsh .sql`.
+- Prefer delegating Edit/Write/NotebookEdit on source files to Codex. `guard-code-edit.sh` shows a HINT (exit 0, non-blocking) when editing source files.
+- Source extensions: `.ts .tsx .js .jsx .mjs .cjs .vue .svelte .astro .css .scss .sass .less .py .rb .php .go .rs .java .kt .swift .dart .cs .fs .scala .ex .exs .lua .nix .r .R .jl .c .h .cpp .hpp .sh .bash .zsh .sql`.
 - Allowed direct edits: `.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore, plan files.
-- On hook block: read stderr, then immediately run `codex exec "..." < /dev/null` with the full path, stack, and done criteria.
+- On HINT: consider running `codex exec "..." < /dev/null` with the full path, stack, and done criteria. Direct edit is allowed if Codex is unavailable or user approved.
 
 ## Fallback
 - If Codex or Antigravity quota is exhausted and Claude is still available, Claude may temporarily substitute only after a manual `usage` check and explicit user approval for the affected stage.
