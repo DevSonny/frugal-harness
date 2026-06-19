@@ -56,7 +56,7 @@ const fs = require("fs");
 const [file] = process.argv.slice(1);
 let data = {};
 try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
-data.model = "Gemini 3.5 Flash (Medium)";
+data.model = "Claude Sonnet 4.6 (Thinking)";
 fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
 ' "$file"
 }
@@ -88,8 +88,8 @@ lines.push(`Subscribed worker agents: ${agents.length ? agents.join(", ") : "(no
 lines.push("");
 if ((p.routing || "complexity-auto") === "complexity-auto") {
   lines.push("Routing: complexity-auto. Apply the shared Model Auto-Routing Criteria in harness-core.md:");
-  lines.push("- Standard tasks: plan on Sonnet, Codex effort `medium`.");
-  lines.push("- Complex tasks: plan on Opus (after user approval), Codex effort `xhigh`.");
+  lines.push("- Standard tasks: plan on Sonnet; Codex effort `medium`; Antigravity model `Claude Sonnet 4.6 (Thinking)`.");
+  lines.push("- Complex tasks: plan on Opus (after user approval); Codex effort `xhigh`; Antigravity model `Claude Opus 4.6 (Thinking)`.");
 } else {
   lines.push(`Routing: ${p.routing}.`);
 }
@@ -100,9 +100,18 @@ for (const [key, label] of order) {
   lines.push(`- ${label}: ${list.length ? list.join(" -> ") : "(unset)"}`);
 }
 lines.push("");
+lines.push("Antigravity model fallback chain (use in order; switch when the current model is out of quota or unavailable):");
+lines.push("  1. `Claude Sonnet 4.6 (Thinking)` — default for standard tasks");
+lines.push("  2. `Claude Opus 4.6 (Thinking)` — default for complex tasks");
+lines.push("  3. `Gemini 3.1 Pro (High)` — fallback when Claude quota exhausted");
+lines.push("  4. `Gemini 3.5 Flash (Medium)` — last resort");
+lines.push("");
 lines.push("Invocation forms:");
-lines.push("- Antigravity: `agy -p \"<task>\"` (add `--dangerously-skip-permissions` for autonomous file edits).");
-lines.push("- Codex: `codex exec \"<task>\" < /dev/null`.");
+lines.push("- Antigravity standard: `agy --model \"Claude Sonnet 4.6 (Thinking)\" -p \"<task>\"`");
+lines.push("- Antigravity complex:  `agy --model \"Claude Opus 4.6 (Thinking)\" -p \"<task>\"`");
+lines.push("- Antigravity (add `--dangerously-skip-permissions` when the task requires autonomous file edits).");
+lines.push("- Codex standard: `codex exec \"<task>\" < /dev/null`.");
+lines.push("- Codex complex:  `codex -c plan_mode_reasoning_effort=xhigh exec \"<task>\" < /dev/null`.");
 lines.push("");
 fs.writeFileSync(outPath, lines.join("\n") + "\n");
 ' "$PROFILE" "$PROFILE_MD"
