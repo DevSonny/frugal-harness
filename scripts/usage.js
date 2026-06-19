@@ -198,7 +198,15 @@ function codexStats() {
 }
 
 function antigravityStats() {
-  return { model: "disabled" };
+  const { execSync } = require("child_process");
+  try {
+    execSync("command -v agy", { stdio: "ignore", shell: true });
+    const settings = readJson(path.join(HOME, ".gemini", "antigravity-cli", "settings.json"), {});
+    const model = settings && settings.model ? settings.model : "active";
+    return { active: true, model };
+  } catch {
+    return { active: false, model: null };
+  }
 }
 
 function costFromTokens(input, cached, cacheCreation, output, inputRate, cachedRate, cacheCreationRate, outputRate) {
@@ -298,8 +306,12 @@ function printDashboard() {
   }
 
   console.log("");
-  console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.dm}(disabled / bypassed)${C.rs}`);
-  console.log(`   Usage tracking is disabled.`);
+  if (antigravity.active) {
+    console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.dm}(${antigravity.model})${C.rs}  ${C.gn}● active${C.rs}`);
+    console.log(`   Usage tracking not available via CLI.`);
+  } else {
+    console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.rd}● not installed${C.rs}`);
+  }
   console.log(line);
 }
 
@@ -324,7 +336,7 @@ function printStatusline() {
   } else {
     parts.push(`${C.dm}Codex${C.rs} ?`);
   }
-  parts.push(`${C.dm}Antigravity${C.rs} disabled`);
+  parts.push(antigravity.active ? `${C.dm}Antigravity${C.rs} ${C.gn}●${C.rs}` : `${C.dm}Antigravity${C.rs} ○`);
   console.log(parts.join("  "));
 
   const claudeCost = claudeSessionCost(transcriptPath);
