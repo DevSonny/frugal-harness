@@ -46,8 +46,6 @@ When Claude hands off a plan:
 - Report every command run and any skipped relevant check with the reason.
 
 ## Docs Delegation
-Documentation fallback order is Antigravity CLI, then Codex, then Claude. Use Antigravity first for long-form docs such as READMEs, changelogs, API docs, and extensive inline comments:
-
-`agy -p "<prompt>" < <file-or-diff>`
+Documentation is handled by Codex CLI first, then Claude. Use Codex for long-form docs such as READMEs, changelogs, API docs, and extensive inline comments.
 
 Commit messages are not delegated. Codex writes commit messages directly from the final diff.

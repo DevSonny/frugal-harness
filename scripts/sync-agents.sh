@@ -3,6 +3,7 @@ set -euo pipefail
 
 CORE="$HOME/.claude/shared/harness-core.md"
 WRAPPER="$HOME/.claude/shared/codex-wrapper.md"
+PROFILE="$HOME/.claude/shared/delegation-profile.md"
 OUT="$HOME/.codex/AGENTS.md"
 
 if [[ ! -f "$CORE" ]]; then
@@ -27,6 +28,12 @@ timestamp="$(date '+%Y-%m-%dT%H:%M:%S%z')"
   echo
   echo "---"
   echo
+  if [[ -f "$PROFILE" ]]; then
+    cat "$PROFILE"
+    echo
+    echo "---"
+    echo
+  fi
   cat "$WRAPPER"
 } > "$OUT"
 

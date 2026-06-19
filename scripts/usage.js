@@ -198,9 +198,7 @@ function codexStats() {
 }
 
 function antigravityStats() {
-  const settings = readJson(path.join(HOME, ".gemini", "antigravity-cli", "settings.json"), {});
-  const model = settings && settings.model && settings.model.name ? settings.model.name : "unknown";
-  return { model };
+  return { model: "disabled" };
 }
 
 function costFromTokens(input, cached, cacheCreation, output, inputRate, cachedRate, cacheCreationRate, outputRate) {
@@ -300,8 +298,8 @@ function printDashboard() {
   }
 
   console.log("");
-  console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.dm}(${antigravity.model})${C.rs}`);
-  console.log(`   Usage tracking is handled internally by Antigravity.`);
+  console.log(`${C.cy}Antigravity CLI${C.rs}  ${C.dm}(disabled / bypassed)${C.rs}`);
+  console.log(`   Usage tracking is disabled.`);
   console.log(line);
 }
 
@@ -326,7 +324,7 @@ function printStatusline() {
   } else {
     parts.push(`${C.dm}Codex${C.rs} ?`);
   }
-  parts.push(`${C.dm}Antigravity${C.rs} active`);
+  parts.push(`${C.dm}Antigravity${C.rs} disabled`);
   console.log(parts.join("  "));
 
   const claudeCost = claudeSessionCost(transcriptPath);

@@ -1,5 +1,20 @@
 # frugal-harness memory
 
+## 2026-06-19 — 슬래시 커맨드 폐지 + 역할별 위임 우선순위 프로파일 도입
+
+### 결정 / 변경
+- 슬래시 커맨드 5개(`/plan /exec /review /docs /ship`) 전부 제거 → 자연어 인터페이스만. `skills/` 디렉터리 삭제, `CLAUDE.md`에서 `@skills/*` import·`## Skills`·`## Workflow Order` 슬래시 표기 제거.
+- 역할별 위임 우선순위 도입. 원천 = `~/.config/frugal/profile.json`(JSON). 렌더 결과 = `~/.claude/shared/delegation-profile.md`. 이 md를 `CLAUDE.md`가 `@import`하고 `sync-agents.sh`가 `~/.codex/AGENTS.md`에 포함 → Claude/Codex 양쪽이 같은 우선순위 사용.
+- 계획은 항상 Claude. 그 외(exec/review/docs/ship)는 Codex/Antigravity를 역할별 우선순위 목록대로. 기본값: antigravity→codex, 단 ship은 codex→antigravity.
+- 모델/effort = `routing: complexity-auto` (harness-core.md의 Model Auto-Routing Criteria 재사용. 표준→Sonnet 계획/Codex medium, 복잡→Opus 계획/Codex xhigh).
+- 신규 스크립트: `scripts/render-profile.sh`(프로파일→md 렌더 + 구독 에이전트 config.toml/antigravity settings 핀 + sync 호출), `scripts/frugal-config.sh`(대화형, `frugal` 심볼릭 링크). install.sh는 비대화형 유지 + 설치된 CLI로 기본 프로파일 자동 작성 후 render 실행. 구독(설치)된 에이전트만 설정.
+- install.sh에서 안 쓰게 된 헬퍼(`set_antigravity_settings`, `set_toml_root_key`) 제거(render-profile.sh로 이동). uninstall.sh에 `frugal` 링크·`~/.config/frugal`·delegation-profile.md·잔존 commands 정리 추가.
+
+### 비고
+- Antigravity 비대화형 호출 = `agy -p "<task>"` (`--dangerously-skip-permissions`로 자동 파일 편집, `--model`로 모델 선택). 구현·git도 가능 확인.
+- 신규 스크립트 2개는 origin(main)에 푸시돼야 `curl` 설치가 동작함.
+- Codex 미연동 상태라 이 작업은 사용자 승인하에 Claude가 직접 구현(fallback).
+
 ## 2026-05-30 — Gemini CLI에서 Antigravity CLI로 마이그레이션
 
 ### 완료된 작업

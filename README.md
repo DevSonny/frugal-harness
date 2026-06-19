@@ -13,10 +13,10 @@ frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Pl
 The core idea is role separation.
 
 - Claude Code plans and orchestrates.
-- Codex CLI implements, reviews code, commits, and pushes.
-- Antigravity CLI writes long-form docs such as READMEs, changelogs, and API documentation.
+- Worker agents (Codex CLI, Antigravity CLI) implement, review, write docs, commit, and push.
+- You pick which worker handles each role — and in what priority order — with `frugal config`.
 
-In normal use, you open Claude Code and speak naturally. The harness rules decide which CLI should handle each stage behind the scenes.
+In normal use, you open Claude Code and speak naturally. The harness rules decide which agent should handle each stage behind the scenes, following your delegation profile.
 
 ## Why Split The Roles?
 
@@ -32,11 +32,11 @@ This keeps Claude session quota out of routine code editing and uses each tool w
 
 | Tool | Model/settings | Role |
 |---|---|---|
-| Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration |
-| Codex CLI | `gpt-5.5`, plan `medium`, implementation `medium` | Implementation, code review, commit, push |
-| Antigravity CLI | default configured | README, changelog, API docs, long-form writing |
+| Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration (always plans) |
+| Codex CLI | `gpt-5.5`, plan `medium`, implementation `medium` | Worker: implementation, review, docs, commit, push |
+| Antigravity CLI | default configured | Worker: implementation, review, docs, long-form writing |
 
-Claude does not normally edit code directly. Code implementation and code review belong to Codex.
+Claude always plans and never edits code directly during normal operation. Every other role (implementation, review, docs, ship) is delegated to a worker agent. Which worker runs first for each role is set by your delegation profile (`frugal config`); the harness tries the first agent in a role's priority list and falls back to the next.
 
 ## Prerequisites
 
@@ -92,12 +92,16 @@ The installer configures:
 - Codex reasoning: planning `medium`, implementation `medium`
 - Antigravity default model configured
 - the `usage` command
-- Claude Code slash commands under `~/.claude/commands`
+- the `frugal` command for configuring agent subscription and per-role priority
+- a default delegation profile at `~/.config/frugal/profile.json` (subscribed = installed CLIs; priority: Antigravity → Codex, ship Codex → Antigravity)
+- `~/.claude/shared/delegation-profile.md`, the rendered profile imported by `CLAUDE.md`
 - Claude Code statusline with remaining quota and current session cost
-- a PreToolUse guard that blocks Claude from editing source files directly
-- `~/.codex/AGENTS.md` for Codex standalone fallback
+- a PreToolUse guard that guides Claude away from editing source files directly
+- `~/.codex/AGENTS.md` for Codex standalone fallback (carries the same priority)
 
-Set `FRUGAL_SKIP_CLI_INSTALL=1` before running the installer if you want it to only check for missing CLIs and never install them.
+Any worker CLI that is not installed is simply skipped. Set `FRUGAL_SKIP_CLI_INSTALL=1` before running the installer if you want it to only check for missing CLIs and never install them.
+
+The installer is non-interactive and applies the default profile. To change which agents you subscribe to or their per-role priority, run `frugal config` afterwards.
 
 No manual `/model` command is needed for normal work. For complex planning, Claude recommends Opus and only switches after user approval.
 
@@ -113,32 +117,46 @@ Natural language is the default interface.
 "Run checks, commit, and push."
 ```
 
-Claude decides whether the current request is planning, implementation, review, docs, or shipping.
+Claude decides whether the current request is planning, implementation, review, docs, or shipping, then delegates each non-planning step to the highest-priority available worker from your delegation profile.
 
-Slash commands are optional shortcuts.
+There are no slash commands — natural language is the only interface.
 
-| Command | Meaning | Owner |
-|---|---|---|
-| `/plan` | Break down work and call out risks | Claude |
-| `/exec` | Implement | Codex |
-| `/review` | Review code | Codex |
-| `/docs` | Write or update docs | Antigravity (→ Codex if exhausted → Claude last resort) |
-| `/ship` | Verify, commit, and push | Codex |
+## Configure Agent Priority
 
-Plain language follows the same routing.
+Run `frugal config` to choose which worker agents you subscribe to and set the per-role delegation priority:
+
+```bash
+frugal config
+```
+
+It detects the installed CLIs (`agy`, `codex`), confirms which you subscribe to, and asks the priority order for `exec`, `review`, `docs`, and `ship`. Planning always stays with Claude. Your answers are saved to `~/.config/frugal/profile.json` and rendered into `~/.claude/shared/delegation-profile.md` (imported by `CLAUDE.md`) and `~/.codex/AGENTS.md`.
+
+Example profile (Antigravity preferred, Codex as fallback):
+
+```json
+{
+  "agents": ["antigravity", "codex"],
+  "roles": {
+    "plan":   ["claude"],
+    "exec":   ["antigravity", "codex"],
+    "review": ["antigravity", "codex"],
+    "docs":   ["antigravity", "codex"],
+    "ship":   ["codex", "antigravity"]
+  },
+  "routing": "complexity-auto"
+}
+```
 
 ## What Claude Does Not Do
 
-Claude does not normally edit code directly.
+Claude does not normally edit code directly. Each role is delegated to a worker agent following the priority order in your delegation profile:
 
-- Code implementation: Codex
-- Code review: Codex
-- Commit messages: Codex
-- Commit/push: Codex
+- Code implementation: highest-priority worker for `exec`
+- Code review: highest-priority worker for `review`
+- Docs: highest-priority worker for `docs`
+- Commit messages / commit / push: highest-priority worker for `ship` (Codex writes its own commit message)
 
-If Codex quota is exhausted and Claude needs to act as an implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
-
-Documentation goes to Antigravity first. If Antigravity fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
+If a worker is out of quota, the harness falls back to the next agent in that role's list. If no worker can act and Claude needs to be the implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
 
 ## Model Routing
 
@@ -206,14 +224,17 @@ Source files:
 | `CLAUDE.md` | Claude role and delegation rules |
 | `shared/harness-core.md` | Shared policy for Claude and Codex |
 | `shared/codex-wrapper.md` | Codex standalone/relay rules |
-| `skills/*.md` | Short optional slash-command prompts |
-| `scripts/sync-agents.sh` | Regenerates `~/.codex/AGENTS.md` from shared sources |
+| `~/.claude/shared/delegation-profile.md` | Rendered per-role priority (generated by `frugal config`) |
+| `scripts/render-profile.sh` | Renders the profile and pins subscribed-agent defaults |
+| `scripts/sync-agents.sh` | Regenerates `~/.codex/AGENTS.md` from shared sources + profile |
 
 To change Codex policy, edit `shared/harness-core.md` or `shared/codex-wrapper.md`, then run:
 
 ```bash
 scripts/sync-agents.sh
 ```
+
+To change which agents handle which role, run `frugal config` (it regenerates the profile and `AGENTS.md` for you).
 
 ## Usage Dashboard
 

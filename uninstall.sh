@@ -61,6 +61,31 @@ if [ -L "$BIN_DIR/usage" ] || [ -f "$BIN_DIR/usage" ]; then
   rm -f "$BIN_DIR/usage"
   echo "  ↩ Removed $BIN_DIR/usage"
 fi
+if [ -L "$BIN_DIR/frugal" ] || [ -f "$BIN_DIR/frugal" ]; then
+  rm -f "$BIN_DIR/frugal"
+  echo "  ↩ Removed $BIN_DIR/frugal"
+fi
+
+# Remove delegation profile (source of truth + rendered markdown)
+PROFILE_DIR="$HOME/.config/frugal"
+PROFILE_MD="$HOME/.claude/shared/delegation-profile.md"
+if [ -d "$PROFILE_DIR" ]; then
+  rm -rf "$PROFILE_DIR"
+  echo "  ↩ Removed $PROFILE_DIR"
+fi
+if [ -f "$PROFILE_MD" ]; then
+  rm -f "$PROFILE_MD"
+  echo "  ↩ Removed $PROFILE_MD"
+fi
+
+# Remove any leftover slash-command files from older installs
+COMMANDS_DIR="$HOME/.claude/commands"
+for legacy in plan exec docs review ship; do
+  if [ -f "$COMMANDS_DIR/${legacy}.md" ]; then
+    rm -f "$COMMANDS_DIR/${legacy}.md"
+    echo "  ↩ Removed legacy command ${legacy}.md"
+  fi
+done
 
 # Remove PreToolUse hook from Claude settings
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
