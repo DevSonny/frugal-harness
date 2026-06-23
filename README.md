@@ -86,7 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 The installer configures:
 
-- missing Claude/Codex/Antigravity CLIs using official install paths
+- Claude Code (auto-installed if missing); Codex CLI and Antigravity CLI prompt `[y/N]` before installing
 - Claude Code default model: `sonnet`
 - Codex default model: `gpt-5.5`
 - Codex reasoning: planning `medium`, implementation `medium`
@@ -98,10 +98,10 @@ The installer configures:
 - Claude Code statusline with remaining quota and current session cost
 - a PreToolUse guard that guides Claude away from editing source files directly
 - `~/.codex/AGENTS.md` for Codex standalone fallback (carries the same priority)
+- [caveman](https://github.com/JuliusBrussee/caveman) Claude Code plugin — compressed communication mode that cuts token usage ~75%
+- [mattpocock/skills](https://github.com/mattpocock/skills) — installs `grill-me`, `grill-with-docs`, and `grilling` skills (and 30+ more) globally via `npx skills@latest`
 
-Any worker CLI that is not installed is simply skipped. Set `FRUGAL_SKIP_CLI_INSTALL=1` before running the installer if you want it to only check for missing CLIs and never install them.
-
-The installer is non-interactive and applies the default profile. To change which agents you subscribe to or their per-role priority, run `frugal config` afterwards.
+To change which agents you subscribe to or their per-role priority, run `frugal config` after install.
 
 No manual `/model` command is needed for normal work. For complex planning, Claude recommends Opus and only switches after user approval.
 

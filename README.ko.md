@@ -86,7 +86,7 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 설치 스크립트는 다음을 설정합니다.
 
-- 누락된 Claude/Codex/Antigravity CLI를 공식 설치 경로로 자동 설치
+- Claude Code는 없으면 자동 설치; Codex CLI·Antigravity CLI는 설치 여부를 `[y/N]`으로 물어봄
 - Claude Code 기본 모델: `sonnet`
 - Codex 기본 모델: `gpt-5.5`
 - Codex reasoning: planning `medium`, implementation `medium`
@@ -98,10 +98,10 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 - 남은 쿼터와 현재 세션 비용을 표시하는 Claude Code statusline
 - Claude의 소스 파일 직접 편집을 막아주는(가이드) PreToolUse guard
 - Codex 단독 실행용 `~/.codex/AGENTS.md` (동일한 우선순위 포함)
+- [caveman](https://github.com/JuliusBrussee/caveman) Claude Code 플러그인 — 토큰 사용량 ~75% 절감하는 압축 통신 모드
+- [mattpocock/skills](https://github.com/mattpocock/skills) — `grill-me`, `grill-with-docs`, `grilling` 스킬(외 30개+)을 `npx skills@latest`로 전역 설치
 
-설치되지 않은 작업 CLI는 그냥 건너뜁니다. CLI 자동 설치를 원하지 않으면 installer 실행 전에 `FRUGAL_SKIP_CLI_INSTALL=1`을 설정하세요.
-
-installer는 비대화형이며 기본 프로파일을 적용합니다. 구독 에이전트나 역할별 우선순위를 바꾸려면 설치 후 `frugal config`를 실행하세요.
+구독 에이전트나 역할별 우선순위를 바꾸려면 설치 후 `frugal config`를 실행하세요.
 
 일반 작업에는 `/model` 수동 설정이 필요 없습니다. 복잡한 planning이 필요하면 Claude가 Opus 전환을 추천하고, 사용자가 승인한 경우에만 전환합니다.
 
