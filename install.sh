@@ -264,6 +264,26 @@ if [ ${#INSTALLED_AGENTS[@]} -eq 0 ]; then
   echo "  ⚠ No worker CLIs detected — only Claude planning is configured. Install Codex/Antigravity, then run: frugal config"
 fi
 
+# Install Claude Code plugins (caveman) if claude CLI is available
+if command -v claude &> /dev/null; then
+  if claude plugin list 2>/dev/null | grep -q "caveman@caveman"; then
+    echo "  ✓ Claude Code plugin caveman already installed"
+  else
+    echo "  → Installing Claude Code plugin: caveman"
+    claude plugin install caveman@caveman 2>&1 | sed 's/^/    /' || echo "  ⚠ caveman plugin install failed — run manually: claude plugin install caveman"
+  fi
+fi
+
+# Install mattpocock/skills globally (grill-me, grill-with-docs, and 32 more)
+if command -v npx &> /dev/null; then
+  if [ -d "$HOME/.agents/skills/grill-me" ]; then
+    echo "  ✓ mattpocock/skills already installed"
+  else
+    echo "  → Installing mattpocock/skills (grill-me, grill-with-docs, +32 more)"
+    npx skills@latest add mattpocock/skills -g 2>&1 | grep -E "Done|error|Error|✓|✗|Installed" | sed 's/^/    /' || true
+    [ -d "$HOME/.agents/skills/grill-me" ] && echo "  ✓ mattpocock/skills installed" || echo "  ⚠ mattpocock/skills install may have failed — run manually: npx skills@latest add mattpocock/skills -g"
+  fi
+fi
 
 echo "✅ frugal-harness installed!"
 echo ""
