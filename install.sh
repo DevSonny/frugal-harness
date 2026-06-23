@@ -60,7 +60,6 @@ echo ""
 echo "Checking prerequisites..."
 
 MISSING=0
-CLI_MISSING=0
 
 if ! command -v node &> /dev/null; then
   echo "  ✗ Node.js not found → install Node.js first"
@@ -84,50 +83,36 @@ if [ $MISSING -eq 1 ]; then
   exit 1
 fi
 
+if command -v claude &> /dev/null; then echo "  ✓ Claude Code"; fi
+if command -v codex &> /dev/null; then echo "  ✓ Codex CLI"; fi
+if command -v agy &> /dev/null; then echo "  ✓ Antigravity CLI"; fi
+
 if ! command -v claude &> /dev/null; then
-  echo "  ✗ Claude Code not found"
-  CLI_MISSING=1
-else
-  echo "  ✓ Claude Code"
+  echo ""
+  echo "  → Installing Claude Code via official native installer"
+  curl -fsSL https://claude.ai/install.sh | bash
 fi
 
 if ! command -v codex &> /dev/null; then
-  echo "  ✗ Codex CLI not found"
-  CLI_MISSING=1
-else
-  echo "  ✓ Codex CLI"
+  printf "\n  Install Codex CLI? [y/N] "
+  read -r _ans
+  if [[ "$_ans" =~ ^[Yy] ]]; then
+    echo "  → Installing Codex CLI via npm"
+    npm install -g @openai/codex
+  else
+    echo "  ↷ Skipping Codex CLI"
+  fi
 fi
 
 if ! command -v agy &> /dev/null; then
-  echo "  ✗ Antigravity CLI not found"
-  CLI_MISSING=1
-else
-  echo "  ✓ Antigravity CLI"
-fi
-
-if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
-  echo ""
-  echo "Installing missing CLIs using official install paths..."
-
-  if ! command -v claude &> /dev/null; then
-    echo "  → Installing Claude Code via official native installer"
-    curl -fsSL https://claude.ai/install.sh | bash
-  fi
-
-  if ! command -v codex &> /dev/null; then
-    echo "  → Installing Codex CLI via npm"
-    npm install -g @openai/codex
-  fi
-
-  if ! command -v agy &> /dev/null; then
+  printf "\n  Install Antigravity CLI? [y/N] "
+  read -r _ans
+  if [[ "$_ans" =~ ^[Yy] ]]; then
     echo "  → Installing Antigravity CLI via native installer"
     curl -fsSL https://antigravity.google/cli/install.sh | bash
+  else
+    echo "  ↷ Skipping Antigravity CLI"
   fi
-elif [ $CLI_MISSING -eq 1 ]; then
-  echo ""
-  echo "⚠ CLI auto-install skipped because FRUGAL_SKIP_CLI_INSTALL=1."
-  echo "   Install missing tools manually, then re-run this script."
-  exit 1
 fi
 
 echo ""
@@ -279,26 +264,6 @@ if [ ${#INSTALLED_AGENTS[@]} -eq 0 ]; then
   echo "  ⚠ No worker CLIs detected — only Claude planning is configured. Install Codex/Antigravity, then run: frugal config"
 fi
 
-# Install Claude Code plugins (caveman) if claude CLI is available
-if command -v claude &> /dev/null; then
-  if claude plugin list 2>/dev/null | grep -q "caveman@caveman"; then
-    echo "  ✓ Claude Code plugin caveman already installed"
-  else
-    echo "  → Installing Claude Code plugin: caveman"
-    claude plugin install caveman@caveman 2>&1 | sed 's/^/    /' || echo "  ⚠ caveman plugin install failed — run manually: claude plugin install caveman"
-  fi
-fi
-
-# Install mattpocock/skills globally (grill-me, grill-with-docs, and 32 more)
-if command -v npx &> /dev/null; then
-  if [ -d "$HOME/.agents/skills/grill-me" ]; then
-    echo "  ✓ mattpocock/skills already installed"
-  else
-    echo "  → Installing mattpocock/skills (grill-me, grill-with-docs, +32 more)"
-    npx skills@latest add mattpocock/skills -g 2>&1 | grep -E "Done|error|Error|✓|✗|Installed" | sed 's/^/    /' || true
-    [ -d "$HOME/.agents/skills/grill-me" ] && echo "  ✓ mattpocock/skills installed" || echo "  ⚠ mattpocock/skills install may have failed — run manually: npx skills@latest add mattpocock/skills -g"
-  fi
-fi
 
 echo "✅ frugal-harness installed!"
 echo ""

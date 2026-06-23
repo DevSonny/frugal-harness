@@ -5,3 +5,6 @@
 .antigravitycli/
 generated-image.jpg
 generated-image.jpg:Zone.Identifier
+
+.agents/
+skills-lock.json
