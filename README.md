@@ -172,6 +172,8 @@ The default rule is to use the cheapest capable path, then escalate only when pl
 - Antigravity complex task: `agy --model "Claude Opus 4.6 (Thinking)" -p "<task>"`
 - Antigravity Claude quota exhausted: switch to `Gemini 3.1 Pro (High)`, then `Gemini 3.5 Flash (Medium)`
 
+**Recommended Antigravity models:** Sonnet and Opus are the primary choices. For lighter or cheaper work, `Gemini 3.1 Pro (Low)` or `Gemini 3.1 Pro (High)` are good alternatives. When one quota pool (Claude or Gemini) runs out and you want to route Antigravity to the other, just tell Claude directly (e.g. "use Gemini 3.1 Pro for this") — manual model override via `--model` works reliably.
+
 A task counts as complex planning when it likely involves:
 
 - 10 or more files
