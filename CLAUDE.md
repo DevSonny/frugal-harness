@@ -28,6 +28,8 @@ Invocation forms:
 - Codex: `codex exec "<path + stack + done-criteria>" < /dev/null`. Codex writes its own commit message from the final diff.
 - Web search and research: delegate to a worker agent first to preserve Claude's context budget. Claude may do a quick web lookup only when no worker agent is available or the answer is trivially found without browsing.
 
+Always run delegation commands via the Bash tool so output is visible in the conversation. Use `run_in_background: true` for long-running jobs.
+
 ## Workflow Order
 Natural language is the only interface; there are no slash commands. A normal loop: Claude plans, then a worker agent implements, reviews, updates docs, and ships — each step routed by the delegation profile and by complexity-based model routing.
 

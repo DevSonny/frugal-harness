@@ -34,7 +34,7 @@ This keeps Claude session quota out of routine code editing and uses each tool w
 |---|---|---|
 | Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration (always plans) |
 | Codex CLI | `gpt-5.5`, plan `medium`, implementation `medium` | Worker: implementation, review, docs, commit, push |
-| Antigravity CLI | default configured | Worker: implementation, review, docs, long-form writing |
+| Antigravity CLI | `Claude Sonnet 4.6 (Thinking)` default; `Claude Opus 4.6 (Thinking)` for complex; `Gemini 3.1 Pro (High)` → `Gemini 3.5 Flash (Medium)` when Claude quota exhausted | Worker: implementation, review, docs, long-form writing |
 
 Claude always plans and never edits code directly during normal operation. Every other role (implementation, review, docs, ship) is delegated to a worker agent. Which worker runs first for each role is set by your delegation profile (`frugal config`); the harness tries the first agent in a role's priority list and falls back to the next.
 
@@ -90,7 +90,7 @@ The installer configures:
 - Claude Code default model: `sonnet`
 - Codex default model: `gpt-5.5`
 - Codex reasoning: planning `medium`, implementation `medium`
-- Antigravity default model configured
+- Antigravity default model: `Claude Sonnet 4.6 (Thinking)`; model fallback chain configured (Sonnet → Opus → Gemini Pro → Gemini Flash)
 - the `usage` command
 - the `frugal` command for configuring agent subscription and per-role priority
 - a default delegation profile at `~/.config/frugal/profile.json` (subscribed = installed CLIs; priority: Antigravity → Codex, ship Codex → Antigravity)
@@ -168,6 +168,9 @@ The default rule is to use the cheapest capable path, then escalate only when pl
 - Codex implementation: `model_reasoning_effort = "medium"`
 - Complex Codex standalone planning: recommend rerunning with `high`
 - Very complex Codex standalone planning: recommend rerunning with `xhigh`
+- Antigravity standard task: `agy --model "Claude Sonnet 4.6 (Thinking)" -p "<task>"`
+- Antigravity complex task: `agy --model "Claude Opus 4.6 (Thinking)" -p "<task>"`
+- Antigravity Claude quota exhausted: switch to `Gemini 3.1 Pro (High)`, then `Gemini 3.5 Flash (Medium)`
 
 A task counts as complex planning when it likely involves:
 
