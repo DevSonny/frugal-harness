@@ -368,8 +368,15 @@ function printDashboard() {
 
   console.log("");
   if (agy) {
-    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model} · exact: /status)${C.rs}`);
+    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model} · exact: /usage)${C.rs}`);
     console.log(`   Model:  ${C.mg}${agy.short}${C.rs}  ${C.dm}(change: agy → /model)${C.rs}`);
+    const aStats = agyUsageStats();
+    if (aStats && aStats.gemini.msgs > 0) {
+      console.log(`   ${C.dm}Gemini 7d:  in ${fmtK(aStats.gemini.in)} / out ${fmtK(aStats.gemini.out)} / think ${fmtK(aStats.gemini.thoughts)}  (${aStats.gemini.msgs} msgs)${C.rs}`);
+    }
+    if (aStats && aStats.nonGoogle.msgs > 0) {
+      console.log(`   ${C.dm}Non-G 7d:   in ${fmtK(aStats.nonGoogle.in)} / out ${fmtK(aStats.nonGoogle.out)} / think ${fmtK(aStats.nonGoogle.thoughts)}  (${aStats.nonGoogle.msgs} msgs)${C.rs}`);
+    }
   } else {
     console.log(`${C.cy}agy${C.rs}  ${C.dm}(not configured)${C.rs}`);
   }
