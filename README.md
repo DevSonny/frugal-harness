@@ -112,19 +112,7 @@ Natural language is the default interface.
 "Run checks, commit, and push."
 ```
 
-Claude decides whether the current request is planning, implementation, review, docs, or shipping.
-
-Slash commands are optional shortcuts.
-
-| Stage | Meaning | Owner |
-|---|---|---|
-| `/plan` | Break down work and call out risks | Claude |
-| `/exec` | Implement | Codex \| agy |
-| `/review` | Review code | Codex \| agy |
-| `/docs` | Write or update docs | agy (→ Codex if exhausted → Claude last resort) |
-| `/ship` | Verify, commit, and push | Codex \| agy |
-
-Plain language follows the same routing.
+Claude decides whether the current request is planning, implementation, review, docs, or shipping, and delegates to the appropriate agent.
 
 ## What Claude Does Not Do
 

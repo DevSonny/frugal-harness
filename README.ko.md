@@ -112,19 +112,7 @@ CLI 자동 설치를 원하지 않으면 installer 실행 전에 `FRUGAL_SKIP_CL
 "검증하고 커밋/푸시해줘"
 ```
 
-Claude가 요청을 보고 지금 필요한 단계가 planning인지, 구현인지, 리뷰인지, 문서 작업인지 판단합니다.
-
-slash command는 선택 단축키입니다.
-
-| 단계 | 의미 | 담당 |
-|---|---|---|
-| `/plan` | 작업을 나누고 리스크를 정리 | Claude |
-| `/exec` | 구현 | Codex \| agy |
-| `/review` | 코드 리뷰 | Codex \| agy |
-| `/docs` | 문서 작성/수정 | agy (→ Codex 소진 시 → Claude 최후 수단) |
-| `/ship` | 검증, 커밋, 푸시 | Codex \| agy |
-
-자연어로 말해도 같은 라우팅을 따릅니다.
+Claude가 요청을 보고 지금 필요한 단계가 planning인지, 구현인지, 리뷰인지, 문서 작업인지 판단하여 적절한 에이전트에게 위임합니다.
 
 ## Claude가 하지 않는 일
 
