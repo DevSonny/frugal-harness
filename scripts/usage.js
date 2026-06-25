@@ -337,7 +337,7 @@ function printDashboard() {
   const claudeSession = apiCache ? apiCache.sessionLeft : claude.sLeft;
   const claudeWeek    = apiCache ? apiCache.weekLeft    : claude.wLeft;
   const claudeSource  = apiCache ? `API · cached ${ageMinutes(apiCache.ts)}m ago` : "local token estimate";
-  console.log(`${C.cy}Claude Code${C.rs}  ${C.dm}(${claudeSource})${C.rs}`);
+  console.log(`${C.cy}Claude Code${C.rs}  ${C.dm}(${claudeSource} · exact: /usage)${C.rs}`);
   console.log(`   Session:    ${bar(claudeSession)}  ${colorPct(claudeSession)}${claudeSession}%${C.rs} left`);
   console.log(`   Weekly:     ${bar(claudeWeek)}  ${colorPct(claudeWeek)}${claudeWeek}%${C.rs} left`);
   console.log(`   ${C.dm}Tokens 5h:  in ${fmtK(claude.sIn)} / out ${fmtK(claude.sOut)}  (${claude.sMsgs} msgs)${C.rs}`);
@@ -346,10 +346,10 @@ function printDashboard() {
   console.log("");
   if (codex) {
     if (codex.plan === "free") {
-      console.log(`${C.cy}Codex CLI${C.rs}  ${C.rd}unsubscribed${C.rs}`);
+      console.log(`${C.cy}Codex CLI${C.rs}  ${C.rd}unsubscribed${C.rs}  ${C.dm}(exact: /status)${C.rs}`);
     } else {
       const hit = codex.limitReached ? `  ${C.rd}⚠ LIMIT REACHED${C.rs}` : "";
-      console.log(`${C.cy}Codex CLI${C.rs}  ${C.dm}(${codex.plan} · ${codex.model} · data from ${codex.ageMin}m ago)${C.rs}${hit}`);
+      console.log(`${C.cy}Codex CLI${C.rs}  ${C.dm}(${codex.plan} · ${codex.model} · data from ${codex.ageMin}m ago · exact: /status)${C.rs}${hit}`);
       if (codex.secondaryLeft !== null) {
         const sessLeft = codexEffectiveLeft(codex);
         console.log(`   Session:   ${bar(sessLeft)}  ${colorPct(sessLeft)}${sessLeft}%${C.rs} left  (resets ${formatReset(codex.primaryReset)})`);
@@ -368,7 +368,7 @@ function printDashboard() {
 
   console.log("");
   if (agy) {
-    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model})${C.rs}`);
+    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model} · exact: /status)${C.rs}`);
     console.log(`   Model:  ${C.mg}${agy.short}${C.rs}  ${C.dm}(change: agy → /model)${C.rs}`);
   } else {
     console.log(`${C.cy}agy${C.rs}  ${C.dm}(not configured)${C.rs}`);
