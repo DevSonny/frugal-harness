@@ -86,13 +86,12 @@ curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/instal
 
 The installer configures:
 
-- missing Claude/Codex/Antigravity CLIs using official install paths
+- missing Claude/Codex/agy CLIs using official install paths
 - Claude Code default model: `sonnet`
 - Codex default model: `gpt-5.5`
 - Codex reasoning: planning `medium`, implementation `medium`
-- Antigravity default model configured
+- agy default model configured
 - the `usage` command
-- Claude Code slash commands under `~/.claude/commands`
 - Claude Code statusline with remaining quota and current session cost
 - a PreToolUse guard that blocks Claude from editing source files directly
 - `~/.codex/AGENTS.md` for Codex standalone fallback
@@ -117,13 +116,13 @@ Claude decides whether the current request is planning, implementation, review, 
 
 Slash commands are optional shortcuts.
 
-| Command | Meaning | Owner |
+| Stage | Meaning | Owner |
 |---|---|---|
 | `/plan` | Break down work and call out risks | Claude |
-| `/exec` | Implement | Codex |
-| `/review` | Review code | Codex |
-| `/docs` | Write or update docs | Antigravity (→ Codex if exhausted → Claude last resort) |
-| `/ship` | Verify, commit, and push | Codex |
+| `/exec` | Implement | Codex \| agy |
+| `/review` | Review code | Codex \| agy |
+| `/docs` | Write or update docs | agy (→ Codex if exhausted → Claude last resort) |
+| `/ship` | Verify, commit, and push | Codex \| agy |
 
 Plain language follows the same routing.
 
@@ -131,14 +130,14 @@ Plain language follows the same routing.
 
 Claude does not normally edit code directly.
 
-- Code implementation: Codex
-- Code review: Codex
-- Commit messages: Codex
-- Commit/push: Codex
+- Code implementation: Codex | agy
+- Code review: Codex | agy
+- Commit messages: Codex | agy
+- Commit/push: Codex | agy
 
-If Codex quota is exhausted and Claude needs to act as an implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
+If both Codex and agy are exhausted and Claude needs to act as an implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
 
-Documentation goes to Antigravity first. If Antigravity fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
+Documentation goes to agy first. If agy fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
 
 ## Model Routing
 
@@ -206,7 +205,7 @@ Source files:
 | `CLAUDE.md` | Claude role and delegation rules |
 | `shared/harness-core.md` | Shared policy for Claude and Codex |
 | `shared/codex-wrapper.md` | Codex standalone/relay rules |
-| `skills/*.md` | Short optional slash-command prompts |
+| `shared/agy-wrapper.md` | agy standalone/relay rules |
 | `scripts/sync-agents.sh` | Regenerates `~/.codex/AGENTS.md` from shared sources |
 
 To change Codex policy, edit `shared/harness-core.md` or `shared/codex-wrapper.md`, then run:

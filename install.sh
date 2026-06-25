@@ -36,23 +36,22 @@ ensure_json_file() {
 set_claude_settings() {
   local file="$1"
   local status_cmd="$2"
-  local guard_cmd="$3"
 
   ensure_json_file "$file"
   node -e '
 const fs = require("fs");
-const [file, statusCmd, guardCmd] = process.argv.slice(1);
+const [file, statusCmd] = process.argv.slice(1);
 let data = {};
 try { data = JSON.parse(fs.readFileSync(file, "utf8")); } catch {}
 data.statusLine = { type: "command", command: statusCmd };
 data.model = "sonnet";
-data.hooks = data.hooks && typeof data.hooks === "object" ? data.hooks : {};
-data.hooks.PreToolUse = [{
-  matcher: "Edit|Write|NotebookEdit",
-  hooks: [{ type: "command", command: guardCmd }]
-}];
+// Remove legacy guard hook if present from prior installs
+if (data.hooks && data.hooks.PreToolUse) {
+  delete data.hooks.PreToolUse;
+  if (Object.keys(data.hooks).length === 0) delete data.hooks;
+}
 fs.writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`);
-' "$file" "$status_cmd" "$guard_cmd"
+' "$file" "$status_cmd"
 }
 
 
@@ -95,7 +94,6 @@ echo ""
 echo "Checking prerequisites..."
 
 MISSING=0
-CLI_MISSING=0
 
 if ! command -v node &> /dev/null; then
   echo "  ✗ Node.js not found → install Node.js first"
@@ -119,6 +117,32 @@ if [ $MISSING -eq 1 ]; then
   exit 1
 fi
 
+# Agent selection
+echo ""
+if [ -n "${FRUGAL_AGENT:-}" ]; then
+  agent_choice="$FRUGAL_AGENT"
+else
+  echo "Which implementation agent(s) do you want to use?"
+  echo "  1) Codex only"
+  echo "  2) agy only"
+  echo "  3) Both (Codex + agy)"
+  printf "Choice [1]: "
+  read -r agent_choice
+  agent_choice="${agent_choice:-1}"
+fi
+
+case "$agent_choice" in
+  1|codex) INSTALL_CODEX=1; INSTALL_AGY=0 ;;
+  2|agy)   INSTALL_CODEX=0; INSTALL_AGY=1 ;;
+  3|both)  INSTALL_CODEX=1; INSTALL_AGY=1 ;;
+  *)       echo "Invalid choice, defaulting to Codex only."; INSTALL_CODEX=1; INSTALL_AGY=0 ;;
+esac
+
+echo ""
+echo "Checking CLIs..."
+
+CLI_MISSING=0
+
 if ! command -v claude &> /dev/null; then
   echo "  ✗ Claude Code not found"
   CLI_MISSING=1
@@ -126,13 +150,23 @@ else
   echo "  ✓ Claude Code"
 fi
 
-if ! command -v codex &> /dev/null; then
-  echo "  ✗ Codex CLI not found"
-  CLI_MISSING=1
-else
-  echo "  ✓ Codex CLI"
+if [ "$INSTALL_CODEX" = "1" ]; then
+  if ! command -v codex &> /dev/null; then
+    echo "  ✗ Codex CLI not found"
+    CLI_MISSING=1
+  else
+    echo "  ✓ Codex CLI"
+  fi
 fi
 
+if [ "$INSTALL_AGY" = "1" ]; then
+  if ! command -v agy &> /dev/null; then
+    echo "  ✗ agy not found"
+    CLI_MISSING=1
+  else
+    echo "  ✓ agy"
+  fi
+fi
 
 if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
   echo ""
@@ -143,9 +177,14 @@ if [ $CLI_MISSING -eq 1 ] && [ "${FRUGAL_SKIP_CLI_INSTALL:-0}" != "1" ]; then
     curl -fsSL https://claude.ai/install.sh | bash
   fi
 
-  if ! command -v codex &> /dev/null; then
+  if [ "$INSTALL_CODEX" = "1" ] && ! command -v codex &> /dev/null; then
     echo "  → Installing Codex CLI via npm"
     npm install -g @openai/codex
+  fi
+
+  if [ "$INSTALL_AGY" = "1" ] && ! command -v agy &> /dev/null; then
+    echo "  → Installing agy via official installer"
+    curl -fsSL https://antigravity.google/cli/install.sh | bash
   fi
 
 elif [ $CLI_MISSING -eq 1 ]; then
@@ -172,7 +211,7 @@ if [ -f "$CLAUDE_MD" ]; then
   echo "  ↩ Backed up existing CLAUDE.md"
 fi
 
-if [ -f "$CODEX_AGENTS" ]; then
+if [ "$INSTALL_CODEX" = "1" ] && [ -f "$CODEX_AGENTS" ]; then
   cp "$CODEX_AGENTS" "${CODEX_AGENTS}${BACKUP_SUFFIX}"
   echo "  ↩ Backed up existing AGENTS.md"
 fi
@@ -184,13 +223,37 @@ mkdir -p "$SKILLS_DIR" "$SHARED_DIR" "$CLAUDE_SCRIPTS_DIR"
 curl -fsSL "$REPO_RAW/CLAUDE.md" -o "$CLAUDE_MD"
 
 # Download shared harness files
-for shared_name in harness-core codex-wrapper; do
+for shared_name in harness-core; do
   local_path="$SHARED_DIR/${shared_name}.md"
   if [ -f "$local_path" ]; then
     cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
   fi
   curl -fsSL "$REPO_RAW/shared/${shared_name}.md" -o "$local_path"
 done
+
+if [ "$INSTALL_CODEX" = "1" ]; then
+  local_path="$SHARED_DIR/codex-wrapper.md"
+  if [ -f "$local_path" ]; then
+    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
+  fi
+  if [ -f "$SCRIPT_DIR/shared/codex-wrapper.md" ]; then
+    cp "$SCRIPT_DIR/shared/codex-wrapper.md" "$local_path"
+  else
+    curl -fsSL "$REPO_RAW/shared/codex-wrapper.md" -o "$local_path"
+  fi
+fi
+
+if [ "$INSTALL_AGY" = "1" ]; then
+  local_path="$SHARED_DIR/agy-wrapper.md"
+  if [ -f "$local_path" ]; then
+    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
+  fi
+  if [ -f "$SCRIPT_DIR/shared/agy-wrapper.md" ]; then
+    cp "$SCRIPT_DIR/shared/agy-wrapper.md" "$local_path"
+  else
+    curl -fsSL "$REPO_RAW/shared/agy-wrapper.md" -o "$local_path"
+  fi
+fi
 
 # Download Claude-side sync script for Codex AGENTS.md
 SYNC_SCRIPT="$CLAUDE_SCRIPTS_DIR/sync-agents.sh"
@@ -200,29 +263,11 @@ fi
 curl -fsSL "$REPO_RAW/scripts/sync-agents.sh" -o "$SYNC_SCRIPT"
 chmod +x "$SYNC_SCRIPT"
 
-# Download skill files
-SKILLS=(plan exec docs review ship)
-for skill_name in "${SKILLS[@]}"; do
-  local_path="$SKILLS_DIR/${skill_name}.md"
-  if [ -f "$local_path" ]; then
-    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
-  fi
-  curl -fsSL "$REPO_RAW/skills/${skill_name}.md" -o "$local_path"
-done
-
-# Register skills as Claude Code slash commands
-COMMANDS_DIR="$HOME/.claude/commands"
-mkdir -p "$COMMANDS_DIR"
-for skill_name in "${SKILLS[@]}"; do
-  cp "$SKILLS_DIR/${skill_name}.md" "$COMMANDS_DIR/${skill_name}.md"
-done
-echo "  ✓ Slash commands registered → $COMMANDS_DIR"
-
-# Install usage scripts
+# Install usage scripts (guard-code-edit.sh is intentionally excluded)
 SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
-for s in usage.sh usage.js usage-statusline.sh guard-code-edit.sh; do
+for s in usage.sh usage.js usage-statusline.sh; do
   if [ -f "$SCRIPT_DIR/scripts/$s" ]; then
     cp "$SCRIPT_DIR/scripts/$s" "$SCRIPTS_DIR/$s"
   else
@@ -243,34 +288,34 @@ if ! echo "$PATH" | grep -q "$BIN_DIR"; then
   fi
 fi
 
-# Configure Claude Code statusline
+# Configure Claude Code settings (no guard hook)
 CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 mkdir -p "$HOME/.claude"
 if [ -f "$CLAUDE_SETTINGS" ]; then
   cp "$CLAUDE_SETTINGS" "${CLAUDE_SETTINGS}${BACKUP_SUFFIX}"
 fi
 set_claude_settings "$CLAUDE_SETTINGS" \
-  "bash $SCRIPTS_DIR/usage-statusline.sh" \
-  "bash $SCRIPTS_DIR/guard-code-edit.sh"
+  "bash $SCRIPTS_DIR/usage-statusline.sh"
 echo "  ✓ Claude Code model: sonnet (Opus recommended only for complex plans)"
-echo "  ✓ PreToolUse hook installed: guard-code-edit.sh (guiding, not blocking)"
 
 # Pin Codex defaults
-CODEX_CONFIG="$HOME/.codex/config.toml"
-mkdir -p "$HOME/.codex"
-if [ -f "$CODEX_CONFIG" ]; then
-  cp "$CODEX_CONFIG" "${CODEX_CONFIG}${BACKUP_SUFFIX}"
-else
-  : > "$CODEX_CONFIG"
-fi
-set_toml_root_key "$CODEX_CONFIG" "model" "gpt-5.5"
-set_toml_root_key "$CODEX_CONFIG" "model_reasoning_effort" "medium"
-set_toml_root_key "$CODEX_CONFIG" "plan_mode_reasoning_effort" "medium"
-echo "  ✓ Codex default model: gpt-5.5 (plan medium, implementation medium)"
+if [ "$INSTALL_CODEX" = "1" ]; then
+  CODEX_CONFIG="$HOME/.codex/config.toml"
+  mkdir -p "$HOME/.codex"
+  if [ -f "$CODEX_CONFIG" ]; then
+    cp "$CODEX_CONFIG" "${CODEX_CONFIG}${BACKUP_SUFFIX}"
+  else
+    : > "$CODEX_CONFIG"
+  fi
+  set_toml_root_key "$CODEX_CONFIG" "model" "gpt-5.5"
+  set_toml_root_key "$CODEX_CONFIG" "model_reasoning_effort" "medium"
+  set_toml_root_key "$CODEX_CONFIG" "plan_mode_reasoning_effort" "medium"
+  echo "  ✓ Codex default model: gpt-5.5 (plan medium, implementation medium)"
 
-# Build Codex standalone harness
-"$SYNC_SCRIPT"
-echo "  ✓ Codex AGENTS.md generated"
+  # Build Codex standalone harness
+  "$SYNC_SCRIPT"
+  echo "  ✓ Codex AGENTS.md generated"
+fi
 
 
 echo "✅ frugal-harness installed!"
@@ -278,9 +323,22 @@ echo ""
 echo ""
 echo "Agents & models:"
 echo "  /plan    → Claude Code  sonnet               (recommend Opus only for complex plans)"
-echo "  /exec    → Codex CLI    gpt-5.5              (build, medium effort)"
-echo "  /review  → Codex CLI    gpt-5.5              (review, medium effort)"
+if [ "$INSTALL_CODEX" = "1" ]; then
+  echo "  /exec    → Codex CLI    gpt-5.5              (build, medium effort)"
+  echo "  /review  → Codex CLI    gpt-5.5              (review, medium effort)"
+  echo "  /ship    → Codex CLI    gpt-5.5              (commit & push, medium effort)"
+fi
+if [ "$INSTALL_AGY" = "1" ]; then
+  echo "  /exec    → agy                               (antigravity CLI, build)"
+  echo "  /review  → agy                               (antigravity CLI, review)"
+  echo "  /ship    → agy                               (antigravity CLI, commit & push)"
+fi
 echo "  /docs    → Gemini CLI   (not configured)"
-echo "  /ship    → Codex CLI    gpt-5.5              (commit & push, medium effort)"
 echo ""
-echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
+if [ "$INSTALL_CODEX" = "1" ] && [ "$INSTALL_AGY" = "1" ]; then
+  echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus) + agy subscription"
+elif [ "$INSTALL_CODEX" = "1" ]; then
+  echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
+elif [ "$INSTALL_AGY" = "1" ]; then
+  echo "Total cost: ~\$20/mo (Claude Pro) + agy subscription"
+fi

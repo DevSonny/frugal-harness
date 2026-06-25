@@ -175,7 +175,7 @@ function codexStats() {
       const payload = obj.payload || {};
       if (obj.type !== "token_count" && payload.type !== "token_count") return;
       const rateLimits = payload.rate_limits;
-      if (!rateLimits || !rateLimits.primary || !rateLimits.secondary) return;
+      if (!rateLimits || !rateLimits.primary) return;
       const ts = Date.parse(obj.timestamp || "");
       if (!Number.isFinite(ts)) return;
       if (!latest || ts > latest.ts) {
@@ -184,19 +184,77 @@ function codexStats() {
     });
   }
 
-  if (!latest) return null;
-  const configModel = readTomlRootString(path.join(HOME, ".codex", "config.toml"), "model");
+  const cfgPath = path.join(HOME, ".codex", "config.toml");
+  const configModel = readTomlRootString(cfgPath, "model");
+  const effortRaw = readTomlRootString(cfgPath, "model_reasoning_effort") || "medium";
+  const effortMap = { low: "lo", medium: "med", high: "hi", xhigh: "xhi" };
+  const configEffort = effortMap[effortRaw.toLowerCase()] || effortRaw;
+
+  if (!latest) return { model: configModel || "unknown", effort: configEffort, noData: true };
+  const rl = latest.rateLimits;
   return {
     ageMin: ageMinutes(latest.ts),
     model: latest.payload.model || configModel || "unknown",
-    plan: latest.rateLimits.plan_type || "unknown",
-    primaryLeft: pctLeft(latest.rateLimits.primary.used_percent),
-    primaryReset: latest.rateLimits.primary.resets_at,
-    secondaryLeft: pctLeft(latest.rateLimits.secondary.used_percent),
-    secondaryReset: latest.rateLimits.secondary.resets_at,
+    effort: configEffort,
+    plan: rl.plan_type || "unknown",
+    limitReached: !!rl.rate_limit_reached_type,
+    primaryLeft: pctLeft(rl.primary.used_percent),
+    primaryReset: rl.primary.resets_at,
+    primaryWindowMin: rl.primary.window_minutes || 10080,
+    secondaryLeft: rl.secondary ? pctLeft(rl.secondary.used_percent) : null,
+    secondaryReset: rl.secondary ? rl.secondary.resets_at : null,
     sourceFile: latest.file,
     tokenUsage: latest.payload.info && latest.payload.info.total_token_usage ? latest.payload.info.total_token_usage : null,
   };
+}
+
+function shrinkAgyModel(raw) {
+  if (!raw) return "?";
+  const m = raw.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+  if (!m) return raw;
+  const name = m[1].trim()
+    .replace(/^Gemini /, "")
+    .replace(/^Claude /, "")
+    .replace(/ /g, "");
+  const effortMap = { Low: "Lo", Medium: "Med", High: "Hi", Thinking: "Think" };
+  const effort = effortMap[m[2]] || m[2];
+  return `${name}/${effort}`;
+}
+
+function agyStats() {
+  const cfg = readJson(path.join(HOME, ".gemini", "antigravity-cli", "settings.json"));
+  if (!cfg) return null;
+  return { model: cfg.model || "?", short: shrinkAgyModel(cfg.model) };
+}
+
+function agyUsageStats() {
+  const tmpRoot = path.join(HOME, ".gemini", "tmp");
+  const cutoff7d = Date.now() - 7 * 86400 * 1000;
+  const gemini  = { in: 0, out: 0, thoughts: 0, msgs: 0 };
+  const nonGoogle = { in: 0, out: 0, thoughts: 0, msgs: 0 };
+
+  for (const file of walkFiles(tmpRoot, (f) => path.basename(f).startsWith("session-") && f.endsWith(".json"))) {
+    const session = readJson(file);
+    if (!session || !Array.isArray(session.messages)) continue;
+    for (const msg of session.messages) {
+      if (!msg.tokens || !msg.model) continue;
+      const ts = Date.parse(msg.timestamp || "");
+      if (!Number.isFinite(ts) || ts < cutoff7d) continue;
+      const t = msg.tokens;
+      const bucket = msg.model.toLowerCase().startsWith("gemini") ? gemini : nonGoogle;
+      bucket.in  += Number(t.input    || 0);
+      bucket.out += Number(t.output   || 0);
+      bucket.thoughts += Number(t.thoughts || 0);
+      bucket.msgs += 1;
+    }
+  }
+
+  return { gemini, nonGoogle };
+}
+
+function codexEffectiveLeft(codex) {
+  if (codex.primaryReset && codex.primaryReset < Date.now() / 1000) return 100;
+  return codex.primaryLeft;
 }
 
 
@@ -271,27 +329,69 @@ function printDashboard() {
   const nowStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")} ${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
   const claude = claudeStats();
   const codex = codexStats();
+  const agy = agyStats();
   console.log(line);
   console.log(` CLI USAGE  (${nowStr})`);
   console.log(line);
-  console.log(`${C.cy}Claude Code${C.rs}  ${C.dm}(rolling window from project JSONL)${C.rs}`);
-  console.log(`   Session 5h: ${bar(claude.sLeft)}  ${colorPct(claude.sLeft)}${claude.sLeft}%${C.rs} left  (${claude.sMsgs} msgs / ${fmtK(claude.sOut)} out tokens)`);
-  console.log(`   Weekly 7d:  ${bar(claude.wLeft)}  ${colorPct(claude.wLeft)}${claude.wLeft}%${C.rs} left  (${claude.wMsgs} msgs / ${fmtK(claude.wOut)} out tokens)`);
-  console.log(`   Tokens 5h:   in ${fmtK(claude.sIn)} / out ${fmtK(claude.sOut)}`);
-  console.log(`   Tokens 7d:   in ${fmtK(claude.wIn)} / out ${fmtK(claude.wOut)}`);
-  console.log(`   ${C.dm}Limits (approx): session=${fmtK(CLAUDE_SESSION_OUT_LIMIT)} / week=${fmtK(CLAUDE_WEEKLY_OUT_LIMIT)} out tokens (env: CLAUDE_SESSION_OUT_LIMIT/CLAUDE_WEEKLY_OUT_LIMIT).${C.rs}`);
-  console.log(`   ${C.dm}Calibrate: CLAUDE_SESSION_OUT_LIMIT=N CLAUDE_WEEKLY_OUT_LIMIT=N usage${C.rs}`);
+  const apiCache = loadClaudeApiCache();
+  const claudeSession = apiCache ? apiCache.sessionLeft : claude.sLeft;
+  const claudeWeek    = apiCache ? apiCache.weekLeft    : claude.wLeft;
+  const claudeSource  = apiCache ? `API · cached ${ageMinutes(apiCache.ts)}m ago` : "local token estimate";
+  console.log(`${C.cy}Claude Code${C.rs}  ${C.dm}(${claudeSource})${C.rs}`);
+  console.log(`   Session:    ${bar(claudeSession)}  ${colorPct(claudeSession)}${claudeSession}%${C.rs} left`);
+  console.log(`   Weekly:     ${bar(claudeWeek)}  ${colorPct(claudeWeek)}${claudeWeek}%${C.rs} left`);
+  console.log(`   ${C.dm}Tokens 5h:  in ${fmtK(claude.sIn)} / out ${fmtK(claude.sOut)}  (${claude.sMsgs} msgs)${C.rs}`);
+  console.log(`   ${C.dm}Tokens 7d:  in ${fmtK(claude.wIn)} / out ${fmtK(claude.wOut)}  (${claude.wMsgs} msgs)${C.rs}`);
 
   console.log("");
   if (codex) {
-    console.log(`${C.cy}Codex CLI${C.rs}  ${C.dm}(${codex.plan} · ${codex.model} · data from ${codex.ageMin}m ago)${C.rs}`);
-    console.log(`   5h limit:  ${bar(codex.primaryLeft)}  ${colorPct(codex.primaryLeft)}${codex.primaryLeft}%${C.rs} left  (resets ${formatReset(codex.primaryReset)})`);
-    console.log(`   Weekly:    ${bar(codex.secondaryLeft)}  ${colorPct(codex.secondaryLeft)}${codex.secondaryLeft}%${C.rs} left  (resets ${formatReset(codex.secondaryReset)})`);
+    if (codex.plan === "free") {
+      console.log(`${C.cy}Codex CLI${C.rs}  ${C.rd}unsubscribed${C.rs}`);
+    } else {
+      const hit = codex.limitReached ? `  ${C.rd}⚠ LIMIT REACHED${C.rs}` : "";
+      console.log(`${C.cy}Codex CLI${C.rs}  ${C.dm}(${codex.plan} · ${codex.model} · data from ${codex.ageMin}m ago)${C.rs}${hit}`);
+      if (codex.secondaryLeft !== null) {
+        const sessLeft = codexEffectiveLeft(codex);
+        console.log(`   Session:   ${bar(sessLeft)}  ${colorPct(sessLeft)}${sessLeft}%${C.rs} left  (resets ${formatReset(codex.primaryReset)})`);
+        console.log(`   Weekly:    ${bar(codex.secondaryLeft)}  ${colorPct(codex.secondaryLeft)}${codex.secondaryLeft}%${C.rs} left  (resets ${formatReset(codex.secondaryReset)})`);
+      } else {
+        const wkLeft = codexEffectiveLeft(codex);
+        console.log(`   Weekly:    ${bar(wkLeft)}  ${colorPct(wkLeft)}${wkLeft}%${C.rs} left  (resets ${formatReset(codex.primaryReset)})`);
+      }
+      if (codex.ageMin > 120) {
+        console.log(`   ${C.dm}⚠ Data: ${codex.ageMin}m ago — run codex TUI to refresh${C.rs}`);
+      }
+    }
   } else {
     console.log(`${C.cy}Codex CLI${C.rs}  ${C.dm}(no rate_limits data found)${C.rs}`);
   }
 
+  console.log("");
+  if (agy) {
+    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model})${C.rs}`);
+    console.log(`   Model:  ${C.mg}${agy.short}${C.rs}  ${C.dm}(change: agy → /model)${C.rs}`);
+  } else {
+    console.log(`${C.cy}agy${C.rs}  ${C.dm}(not configured)${C.rs}`);
+  }
+
   console.log(line);
+}
+
+const CLAUDE_API_CACHE = path.join(HOME, ".cache", "frugal-harness", "claude-api.json");
+
+function saveClaudeApiCache(sessionLeft, weekLeft) {
+  try {
+    fs.mkdirSync(path.dirname(CLAUDE_API_CACHE), { recursive: true });
+    fs.writeFileSync(CLAUDE_API_CACHE, JSON.stringify({ sessionLeft, weekLeft, ts: Date.now() }));
+  } catch {}
+}
+
+function loadClaudeApiCache() {
+  try {
+    const obj = JSON.parse(fs.readFileSync(CLAUDE_API_CACHE, "utf8"));
+    if (typeof obj.sessionLeft === "number" && typeof obj.weekLeft === "number") return obj;
+  } catch {}
+  return null;
 }
 
 function printStatusline() {
@@ -303,15 +403,54 @@ function printStatusline() {
   const branch = gitBranch(cwd);
   const claude = claudeStats();
   const codex = codexStats();
+  const agy = agyStats();
+
+  const rl = input && input.rate_limits;
+  const apiSession = (rl && rl.five_hour && typeof rl.five_hour.used_percentage === "number")
+    ? Math.max(0, 100 - Math.floor(rl.five_hour.used_percentage)) : null;
+  const apiWeek = (rl && rl.seven_day && typeof rl.seven_day.used_percentage === "number")
+    ? Math.max(0, 100 - Math.floor(rl.seven_day.used_percentage)) : null;
+
+  if (apiSession !== null || apiWeek !== null) {
+    const prev = loadClaudeApiCache() || {};
+    saveClaudeApiCache(
+      apiSession !== null ? apiSession : prev.sessionLeft,
+      apiWeek   !== null ? apiWeek   : prev.weekLeft
+    );
+  }
+
+  const apiCache = loadClaudeApiCache();
+  const claudeSession = apiSession !== null ? apiSession : (apiCache ? apiCache.sessionLeft : claude.sLeft);
+  const claudeWeek    = apiWeek   !== null ? apiWeek   : (apiCache ? apiCache.weekLeft    : claude.wLeft);
+
   const parts = [];
   if (projectDir) parts.push(`${C.cy}${path.basename(projectDir)}${C.rs}`);
   if (modelName) parts.push(`${C.mg}${modelName}${C.rs}`);
   if (branch) parts.push(`${C.gn}⎇ ${branch}${C.rs}`);
-  parts.push(`${C.dm}Claude${C.rs} ${colorPct(claude.sLeft)}session ${claude.sLeft}%${C.rs} ${colorPct(claude.wLeft)}week ${claude.wLeft}%${C.rs}`);
+  parts.push(`${C.dm}Claude${C.rs} ${colorPct(claudeSession)}session ${claudeSession}%${C.rs} ${colorPct(claudeWeek)}week ${claudeWeek}%${C.rs}`);
   if (codex) {
-    parts.push(`${C.dm}Codex${C.rs} ${colorPct(codex.primaryLeft)}5h ${codex.primaryLeft}%${C.rs} ${colorPct(codex.secondaryLeft)}week ${codex.secondaryLeft}%${C.rs}`);
+    const modelTag = `${C.mg}${codex.model}/${codex.effort}${C.rs}`;
+    if (codex.noData) {
+      parts.push(`${C.dm}Codex${C.rs} ${modelTag}`);
+    } else if (codex.plan === "free") {
+      parts.push(`${C.dm}Codex${C.rs} ${modelTag} ${C.rd}unsubscribed${C.rs}`);
+    } else {
+      const hit = codex.limitReached ? `${C.rd}LIMIT${C.rs} ` : "";
+      let s = `${C.dm}Codex${C.rs} ${modelTag} ${hit}`;
+      if (codex.secondaryLeft !== null) {
+        const sessLeft = codexEffectiveLeft(codex);
+        s += `${colorPct(sessLeft)}session ${sessLeft}%${C.rs} ${colorPct(codex.secondaryLeft)}wk ${codex.secondaryLeft}%${C.rs}`;
+      } else {
+        const wkLeft = codexEffectiveLeft(codex);
+        s += `${colorPct(wkLeft)}wk ${wkLeft}%${C.rs}`;
+      }
+      parts.push(s);
+    }
   } else {
     parts.push(`${C.dm}Codex${C.rs} ?`);
+  }
+  if (agy) {
+    parts.push(`${C.dm}agy${C.rs} ${C.mg}${agy.short}${C.rs}`);
   }
   console.log(parts.join("  "));
 

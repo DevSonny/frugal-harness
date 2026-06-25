@@ -18,33 +18,35 @@ Before writing a plan, apply the shared Model Auto-Routing Criteria:
 
 Opus is for high-value planning only, not for direct implementation. Never switch to Opus or higher-cost planning without user approval.
 
+## Delegation Priority
+Source-code files are strongly preferred to be delegated to an available implementation agent.
+Use whichever agent(s) are installed; delegate to Claude directly only when none are available and the user has approved.
+
+- **Codex** (if installed): `codex exec "<path + stack + done-criteria>" < /dev/null`
+- **agy** (if installed): `agy --model "<model>" -p "<task description with file path and done-criteria>"`
+  - 빠른 구현/수정: `"Gemini 3.5 Flash (Medium)"` (Gemini 쿼터)
+  - 복잡한 구현: `"Gemini 3.1 Pro (High)"` 또는 `"Claude Sonnet 4.6 (Thinking)"`
+  - 아키텍처/판단: `"Claude Opus 4.6 (Thinking)"` (비구글 쿼터)
+  - 문서/README: `"Gemini 3.5 Flash (Low)"` (Gemini 쿼터)
+  - `"GPT-OSS 120B (Medium)"` 사용 금지 (오픈소스 모델)
+- Both installed: choose based on task or user preference — either is valid.
+- Neither installed: ask the user for approval before editing source files directly.
+
+This is a soft preference, not a hard block. The user can ask Claude to edit directly at any time.
+
 ## Delegation
-- Implementation and bug fixes: `codex exec "<path + stack + done-criteria>" < /dev/null` via Bash.
-- Review, commit message, commit, and push: `codex exec "..." < /dev/null` (Codex writes its own commit message).
-- Docs, READMEs, changelogs, and inline comments: Antigravity CLI first (`agy -p`), then Codex, then Claude only as the final fallback.
-- Web search and research: `codex exec "<research question + what to report>" < /dev/null` first — Codex has web search capability and preserves Claude's context budget. Claude may do a quick web lookup only when Codex is unavailable or the answer is trivially found without browsing.
+- Implementation and bug fixes: use Codex or agy per Delegation Priority above.
+- Review, commit message, commit, and push: Codex (`codex exec "..." < /dev/null`) or agy (`agy -p "..."`).
+- Docs, READMEs, changelogs, and inline comments: Gemini CLI first (`gemini -p`), then Codex or agy, then Claude only as the final fallback.
+- Web search and research: Codex (`codex exec "<research question>" < /dev/null`) or agy first — both have web search and preserve Claude's context budget.
 
 ## Workflow Order
 Natural language is the primary interface. Slash commands are optional shortcuts for:
 
-`/plan` (Claude) -> `/exec` (Codex) -> `/review` (Codex) -> `/docs` (Antigravity -> Codex -> Claude) -> `/ship` (Codex)
-
-## Model-Agnostic Enforcement (Critical)
-Regardless of active Claude model (Opus/Sonnet/Haiku):
-- Prefer delegating Edit/Write/NotebookEdit on source files to Codex. `guard-code-edit.sh` shows a HINT (exit 0, non-blocking) when editing source files.
-- Source extensions: `.ts .tsx .js .jsx .mjs .cjs .vue .svelte .astro .css .scss .sass .less .py .rb .php .go .rs .java .kt .swift .dart .cs .fs .scala .ex .exs .lua .nix .r .R .jl .c .h .cpp .hpp .sh .bash .zsh .sql`.
-- Allowed direct edits: `.md .json .toml .yml .yaml .txt`, Dockerfile, .gitignore, plan files.
-- On HINT: consider running `codex exec "..." < /dev/null` with the full path, stack, and done criteria. Direct edit is allowed if Codex is unavailable or user approved.
+`/plan` (Claude) -> `/exec` (Codex | agy) -> `/review` (Codex | agy) -> `/docs` (Gemini -> Codex | agy -> Claude) -> `/ship` (Codex | agy)
 
 ## Fallback
-- If Codex or Antigravity quota is exhausted and Claude is still available, Claude may temporarily substitute only after a manual `usage` check and explicit user approval for the affected stage.
-- Claude implementation fallback requires explicit user approval for the specific change. Keep the source-edit guard active by default and prefer narrow, auditable edits.
-- After quota is restored, return to the original agent role.
-- If Claude quota is exhausted or Claude is unavailable, stop and notify the user. The user can switch to Codex CLI, which uses `~/.codex/AGENTS.md` as the full standalone harness.
+- If Codex and agy are both unavailable (quota exhausted or not installed), Claude may edit source files directly only after a manual `usage` check and explicit user approval for the affected stage.
+- After quota is restored, return to delegating to Codex or agy.
+- If Claude quota is exhausted or Claude is unavailable, stop and notify the user. The user can switch to Codex CLI directly (`~/.codex/AGENTS.md`) or run agy standalone.
 
-## Skills
-@skills/plan.md
-@skills/exec.md
-@skills/review.md
-@skills/docs.md
-@skills/ship.md
