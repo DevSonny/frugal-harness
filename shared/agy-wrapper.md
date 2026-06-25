@@ -17,7 +17,7 @@ agy --model "<model>" -p "<task description with file path, tech stack, and done
 |------|------|
 | 빠른 구현 / 간단한 수정 | `Gemini 3.5 Flash (Medium)` |
 | 복잡한 구현 | `Gemini 3.1 Pro (High)` 또는 `Claude Sonnet 4.6 (Thinking)` |
-| 아키텍처 / 판단이 많은 작업 | `Claude Opus 4.6 (Thinking)` |
+| 아키텍처 / 판단이 많은 작업 | `Claude Opus 4.8 (Thinking)` |
 | 문서 / README / changelog | `Gemini 3.5 Flash (Low)` |
 | 리뷰 | `Gemini 3.1 Pro (Low)` |
 
@@ -25,7 +25,7 @@ Available models (from `agy models`):
 - `Gemini 3.5 Flash (Low/Medium/High)` — Gemini 쿼터
 - `Gemini 3.1 Pro (Low/High)` — Gemini 쿼터
 - `Claude Sonnet 4.6 (Thinking)` — 비구글 쿼터
-- `Claude Opus 4.6 (Thinking)` — 비구글 쿼터
+- `Claude Opus 4.8 (Thinking)` — 비구글 쿼터
 - ~~`GPT-OSS 120B (Medium)`~~ — 사용 금지 (오픈소스 모델)
 
 > Gemini 모델과 Claude 모델은 사용량 측정 쿼터가 다름. 쿼터 절감 시 Gemini 모델 우선 사용.

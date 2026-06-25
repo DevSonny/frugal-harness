@@ -154,7 +154,7 @@ When Claude delegates to agy, it picks a model based on task complexity:
 |---|---|
 | Quick implementation / simple fix | `Gemini 3.5 Flash (Medium)` |
 | Complex implementation | `Gemini 3.1 Pro (High)` or `Claude Sonnet 4.6 (Thinking)` |
-| Architecture / judgment-heavy | `Claude Opus 4.6 (Thinking)` |
+| Architecture / judgment-heavy | `Claude Opus 4.8 (Thinking)` |
 | Documentation / README | `Gemini 3.5 Flash (Low)` |
 | Code review | `Gemini 3.1 Pro (Low)` |
 
