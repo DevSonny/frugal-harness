@@ -119,24 +119,108 @@ fi
 
 # Agent selection
 echo ""
-if [ -n "${FRUGAL_AGENT:-}" ]; then
-  agent_choice="$FRUGAL_AGENT"
+if [ -n "${FRUGAL_MAIN:-}" ] && [ -n "${FRUGAL_HELPERS:-}" ]; then
+  main_choice="$FRUGAL_MAIN"
+  helper_choice="$FRUGAL_HELPERS"
+  deploy_choice="${FRUGAL_DEPLOY_CLAUDE:-yes}"
 else
-  echo "Which implementation agent(s) do you want to use?"
-  echo "  1) Codex only"
-  echo "  2) agy only"
-  echo "  3) Both (Codex + agy)"
+  echo "Step 1: Which is your main handler? (The agent you talk to directly)"
+  echo "  1) Claude Code"
+  echo "  2) agy (Antigravity CLI)"
+  echo "  3) Codex CLI"
+  printf "Choice [%s]: " "${FRUGAL_MAIN:-1}"
+  read -r main_choice < /dev/tty
+  main_choice="${main_choice:-${FRUGAL_MAIN:-1}}"
+
+  case "$main_choice" in
+    1|claude) FRUGAL_MAIN="claude" ;;
+    2|agy)    FRUGAL_MAIN="agy" ;;
+    3|codex)  FRUGAL_MAIN="codex" ;;
+    *)        echo "Invalid choice. Defaulting to claude."; FRUGAL_MAIN="claude" ;;
+  esac
+
+  echo ""
+  echo "Step 2: Install helper agents? (for delegation/fallback)"
+  if [ "$FRUGAL_MAIN" = "claude" ]; then
+    echo "  1) Both Codex and agy"
+    echo "  2) Codex only"
+    echo "  3) agy only"
+    echo "  4) None"
+  elif [ "$FRUGAL_MAIN" = "agy" ]; then
+    echo "  1) Both Claude and Codex"
+    echo "  2) Claude only"
+    echo "  3) Codex only"
+    echo "  4) None"
+  elif [ "$FRUGAL_MAIN" = "codex" ]; then
+    echo "  1) Both Claude and agy"
+    echo "  2) Claude only"
+    echo "  3) agy only"
+    echo "  4) None"
+  fi
   printf "Choice [1]: "
-  read -r agent_choice
-  agent_choice="${agent_choice:-1}"
+  read -r helper_choice < /dev/tty
+  helper_choice="${helper_choice:-1}"
+  
+  if [ "$FRUGAL_MAIN" = "claude" ]; then
+    case "$helper_choice" in
+      1) FRUGAL_HELPERS="codex,agy" ;;
+      2) FRUGAL_HELPERS="codex" ;;
+      3) FRUGAL_HELPERS="agy" ;;
+      4) FRUGAL_HELPERS="none" ;;
+      *) FRUGAL_HELPERS="codex,agy" ;;
+    esac
+  elif [ "$FRUGAL_MAIN" = "agy" ]; then
+    case "$helper_choice" in
+      1) FRUGAL_HELPERS="claude,codex" ;;
+      2) FRUGAL_HELPERS="claude" ;;
+      3) FRUGAL_HELPERS="codex" ;;
+      4) FRUGAL_HELPERS="none" ;;
+      *) FRUGAL_HELPERS="claude,codex" ;;
+    esac
+  elif [ "$FRUGAL_MAIN" = "codex" ]; then
+    case "$helper_choice" in
+      1) FRUGAL_HELPERS="claude,agy" ;;
+      2) FRUGAL_HELPERS="claude" ;;
+      3) FRUGAL_HELPERS="agy" ;;
+      4) FRUGAL_HELPERS="none" ;;
+      *) FRUGAL_HELPERS="claude,agy" ;;
+    esac
+  fi
+
+  if [ "$FRUGAL_MAIN" != "claude" ]; then
+    echo ""
+    echo "Step 3: Deploy CLAUDE.md anyway?"
+    echo "  Even though Claude is not your main handler, you can deploy CLAUDE.md"
+    echo "  so that if you ever open Claude Code, it knows about your helpers."
+    printf "Deploy CLAUDE.md? (y/n) [%s]: " "${FRUGAL_DEPLOY_CLAUDE:-y}"
+    read -r deploy_choice < /dev/tty
+    deploy_choice="${deploy_choice:-${FRUGAL_DEPLOY_CLAUDE:-y}}"
+    case "$deploy_choice" in
+      y|Y|yes) FRUGAL_DEPLOY_CLAUDE="yes" ;;
+      n|N|no)  FRUGAL_DEPLOY_CLAUDE="no" ;;
+      *)       FRUGAL_DEPLOY_CLAUDE="yes" ;;
+    esac
+  else
+    FRUGAL_DEPLOY_CLAUDE="yes"
+  fi
 fi
 
-case "$agent_choice" in
-  1|codex) INSTALL_CODEX=1; INSTALL_AGY=0 ;;
-  2|agy)   INSTALL_CODEX=0; INSTALL_AGY=1 ;;
-  3|both)  INSTALL_CODEX=1; INSTALL_AGY=1 ;;
-  *)       echo "Invalid choice, defaulting to Codex only."; INSTALL_CODEX=1; INSTALL_AGY=0 ;;
-esac
+# Determine install flags
+INSTALL_CODEX=0
+INSTALL_AGY=0
+INSTALL_CLAUDE=0
+
+if [ "$FRUGAL_MAIN" = "codex" ] || [[ "$FRUGAL_HELPERS" == *"codex"* ]]; then INSTALL_CODEX=1; fi
+if [ "$FRUGAL_MAIN" = "agy" ] || [[ "$FRUGAL_HELPERS" == *"agy"* ]]; then INSTALL_AGY=1; fi
+if [ "$FRUGAL_MAIN" = "claude" ] || [[ "$FRUGAL_HELPERS" == *"claude"* ]]; then INSTALL_CLAUDE=1; fi
+
+# Save configuration
+CONFIG_FILE="$HOME/.frugal-harness/config.sh"
+mkdir -p "$HOME/.frugal-harness"
+echo "FRUGAL_MAIN=$FRUGAL_MAIN" > "$CONFIG_FILE"
+echo "FRUGAL_HELPERS=$FRUGAL_HELPERS" >> "$CONFIG_FILE"
+echo "FRUGAL_DEPLOY_CLAUDE=$FRUGAL_DEPLOY_CLAUDE" >> "$CONFIG_FILE"
+
 
 echo ""
 echo "Checking CLIs..."
@@ -238,27 +322,31 @@ for shared_name in harness-core; do
 done
 
 if [ "$INSTALL_CODEX" = "1" ]; then
-  local_path="$SHARED_DIR/codex-wrapper.md"
-  if [ -f "$local_path" ]; then
-    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
-  fi
-  if [ -f "$SCRIPT_DIR/shared/codex-wrapper.md" ]; then
-    cp "$SCRIPT_DIR/shared/codex-wrapper.md" "$local_path"
-  else
-    curl -fsSL "$REPO_RAW/shared/codex-wrapper.md" -o "$local_path"
-  fi
+  for wrapper_type in "main" "helper"; do
+    local_path="$SHARED_DIR/codex-wrapper-${wrapper_type}.md"
+    if [ -f "$local_path" ]; then
+      cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
+    fi
+    if [ -f "$SCRIPT_DIR/shared/codex-wrapper-${wrapper_type}.md" ]; then
+      cp "$SCRIPT_DIR/shared/codex-wrapper-${wrapper_type}.md" "$local_path"
+    else
+      curl -fsSL "$REPO_RAW/shared/codex-wrapper-${wrapper_type}.md" -o "$local_path"
+    fi
+  done
 fi
 
 if [ "$INSTALL_AGY" = "1" ]; then
-  local_path="$SHARED_DIR/agy-wrapper.md"
-  if [ -f "$local_path" ]; then
-    cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
-  fi
-  if [ -f "$SCRIPT_DIR/shared/agy-wrapper.md" ]; then
-    cp "$SCRIPT_DIR/shared/agy-wrapper.md" "$local_path"
-  else
-    curl -fsSL "$REPO_RAW/shared/agy-wrapper.md" -o "$local_path"
-  fi
+  for wrapper_type in "main" "helper"; do
+    local_path="$SHARED_DIR/agy-wrapper-${wrapper_type}.md"
+    if [ -f "$local_path" ]; then
+      cp "$local_path" "${local_path}${BACKUP_SUFFIX}"
+    fi
+    if [ -f "$SCRIPT_DIR/shared/agy-wrapper-${wrapper_type}.md" ]; then
+      cp "$SCRIPT_DIR/shared/agy-wrapper-${wrapper_type}.md" "$local_path"
+    else
+      curl -fsSL "$REPO_RAW/shared/agy-wrapper-${wrapper_type}.md" -o "$local_path"
+    fi
+  done
 fi
 
 # Download Claude-side sync script for Codex AGENTS.md
@@ -273,11 +361,11 @@ else
 fi
 chmod +x "$SYNC_SCRIPT"
 
-# Install usage scripts (guard-code-edit.sh is intentionally excluded)
+# Install usage scripts and config utility (guard-code-edit.sh is intentionally excluded)
 SCRIPTS_DIR="$HOME/.local/share/frugal-harness/scripts"
 BIN_DIR="$HOME/.local/bin"
 mkdir -p "$SCRIPTS_DIR" "$BIN_DIR"
-for s in usage.sh usage.js usage-statusline.sh; do
+for s in usage.sh usage.js usage-statusline.sh frugal-config.sh; do
   if [ -f "$SCRIPT_DIR/scripts/$s" ]; then
     cp "$SCRIPT_DIR/scripts/$s" "$SCRIPTS_DIR/$s"
   else
@@ -286,7 +374,8 @@ for s in usage.sh usage.js usage-statusline.sh; do
   chmod +x "$SCRIPTS_DIR/$s"
 done
 ln -sf "$SCRIPTS_DIR/usage.sh" "$BIN_DIR/usage"
-echo "  ✓ usage scripts → $SCRIPTS_DIR"
+ln -sf "$SCRIPTS_DIR/frugal-config.sh" "$BIN_DIR/frugal-config"
+echo "  ✓ usage and config scripts → $SCRIPTS_DIR"
 if ! echo "$PATH" | grep -q "$BIN_DIR"; then
   _rc="$(rcfile_for_shell "$(detect_shell)")"; _sh="$(detect_shell)"
   if [ "$_sh" = "fish" ]; then
@@ -338,18 +427,23 @@ echo "✅ frugal-harness installed!"
 echo ""
 echo ""
 echo "Configured Agents:"
-echo "  Planner      → Claude Code (sonnet)"
-if [ "$INSTALL_CODEX" = "1" ]; then
-  echo "  Executor     → Codex CLI (gpt-5.5)"
-fi
-if [ "$INSTALL_AGY" = "1" ]; then
-  echo "  Executor     → agy"
-fi
+echo "  Main handler → $FRUGAL_MAIN"
+echo "  Helpers      → $FRUGAL_HELPERS"
 echo ""
-if [ "$INSTALL_CODEX" = "1" ] && [ "$INSTALL_AGY" = "1" ]; then
-  echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus) + agy subscription"
-elif [ "$INSTALL_CODEX" = "1" ]; then
-  echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus)"
-elif [ "$INSTALL_AGY" = "1" ]; then
-  echo "Total cost: ~\$20/mo (Claude Pro) + agy subscription"
+
+# Cost estimation
+if [ "$FRUGAL_MAIN" = "claude" ]; then
+  if [[ "$FRUGAL_HELPERS" == *"codex"* ]] && [[ "$FRUGAL_HELPERS" == *"agy"* ]]; then
+    echo "Total cost: ~\$60/mo"
+  elif [[ "$FRUGAL_HELPERS" == *"codex"* ]] || [[ "$FRUGAL_HELPERS" == *"agy"* ]]; then
+    echo "Total cost: ~\$40/mo"
+  else
+    echo "Total cost: ~\$20/mo"
+  fi
+elif [ "$FRUGAL_MAIN" = "agy" ] || [ "$FRUGAL_MAIN" = "codex" ]; then
+  if [[ "$FRUGAL_HELPERS" == *"claude"* ]]; then
+    echo "Total cost: ~\$40/mo"
+  else
+    echo "Total cost: ~\$20/mo"
+  fi
 fi

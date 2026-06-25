@@ -1,5 +1,26 @@
 # frugal-harness memory
 
+## 2026-06-25 — agy AGENTS.md 생성 및 README 전면 개정
+
+### 완료된 작업
+- `scripts/sync-agents.sh`를 Codex와 agy 모두 지원하도록 확장: `~/.codex/AGENTS.md`와 `~/.gemini/config/AGENTS.md` 각각 생성
+- `install.sh`에 agy AGENTS.md 백업/생성 로직 추가 및 sync-agents.sh 로컬 복사 우선 로직 추가
+- `install.sh` 최종 출력에서 삭제된 slash command 참조 제거, 에이전트 요약만 표시
+- `README.md`와 `README.ko.md`를 현재 아키텍처에 맞게 전면 재작성:
+  - 에이전트 선택 설치(Codex/agy/both) 및 `FRUGAL_AGENT` 환경변수 문서화
+  - Codex 고정 언어 → 일반적인 '구현 에이전트(implementation agent)' 표현으로 변경
+  - 비용 비교 테이블 추가 (3가지 구성)
+  - agy 모델 선택 가이드 및 Codex reasoning effort 서브섹션 추가
+  - `~/.codex/AGENTS.md`와 `~/.gemini/config/AGENTS.md` 모두 문서화
+  - 삭제된 slash command(/plan, /exec, /review, /ship, /docs) 참조 전부 제거
+  - PreToolUse guard 언급 제거
+- `CLAUDE.md` Workflow Order에서 slash command 표기 제거
+
+### 주요 결정
+- slash command는 삭제되어 자연어만 기본 인터페이스
+- sync-agents.sh는 wrapper 파일이 존재하는 에이전트에 대해서만 AGENTS.md 생성
+- install.sh에서 sync-agents.sh는 agent 선택과 무관하게 항상 실행 (존재하는 wrapper만 처리)
+
 ## 2026-05-30 — Gemini CLI에서 Antigravity CLI로 마이그레이션
 
 ### 완료된 작업

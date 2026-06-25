@@ -10,36 +10,34 @@
 
 frugal-harness is a low-cost AI coding harness that keeps the whole development loop — plan, implement, review, commit, push — running on affordable subscriptions instead of a $100/mo setup.
 
-The core idea is **role separation**:
+The core idea is **role separation**. However, you get to choose your **main handler** (the agent you talk to) and your **helper agents** (who receive delegated tasks).
 
-- **Claude Code** plans and orchestrates.
-- An **implementation agent** (Codex CLI or Antigravity CLI) implements, reviews, commits, and pushes.
+## Cost Combinations
 
-You open Claude Code and speak naturally. The harness rules decide which agent handles each stage behind the scenes.
+Most AI coding setups assume a $100/mo plan. But frugal-harness lets you build your own combination:
 
-## Why Split The Roles?
+| Main Handler | Helper Agent(s) | Monthly cost |
+|---|---|---|
+| Claude Code | + Codex | ~$40/mo (Claude Pro + ChatGPT Plus) |
+| Claude Code | + agy | ~$40/mo (Claude Pro + Antigravity) |
+| Claude Code | + both | ~$60/mo |
+| agy | None | ~$20/mo (Antigravity) |
+| agy | + Claude | ~$40/mo |
+| Codex | None | ~$20/mo (ChatGPT Plus) |
+| Codex | + Claude | ~$40/mo |
 
-Most AI coding setups assume a $100/mo plan. But frugal-harness is built around cheaper subscription combinations:
+## Behavior by Main Handler
 
-| Setup | Monthly cost |
-|---|---|
-| Claude Pro + Codex (ChatGPT Plus) | ~$40/mo |
-| Claude Pro + agy | ~$40/mo |
-| Claude Pro + both | ~$60/mo |
+The way the harness works depends on which agent you choose as your main handler.
 
-Claude is most efficient when it focuses on planning and orchestration. Implementation, code review, commits, and pushes are delegated to an implementation agent that is better suited for those tasks.
+| Main Handler | What it does | Helpers it can delegate to |
+|---|---|---|
+| **Claude Code** | Plans and orchestrates. It does not normally edit code directly. It delegates implementation, review, commit, and push to helpers. | agy, Codex |
+| **agy** | End-to-end agent: plans, implements, reviews, commits, and pushes directly. | Claude, Codex |
+| **Codex CLI** | End-to-end agent: plans, implements, reviews, commits, and pushes directly. | Claude, agy |
 
-This keeps Claude session quota out of routine code editing and uses each tool where it is strongest.
-
-## Agent Roles
-
-| Agent | Role |
-|---|---|
-| Claude Code | Planning and orchestration (default `sonnet`, Opus only for complex plans) |
-| Codex CLI | Implementation, code review, commit, push, documentation (if installed) |
-| Antigravity CLI (agy) | Implementation, code review, commit, push, documentation (if installed) |
-
-Claude does not normally edit code directly. Code implementation and code review are delegated to the installed implementation agent(s).
+> [!IMPORTANT]
+> When **agy** or **Codex** is your main handler, they are self-sufficient. They don't need to delegate — they ARE the executor. The helpers are strictly optional fallbacks.
 
 ## Prerequisites
 
@@ -68,78 +66,59 @@ The installer can install missing CLIs automatically using official install path
 After installation, log in to the CLIs you chose:
 
 ```bash
-claude login        # always required
+claude login        # if using Claude
 codex login         # if using Codex
 agy login           # if using agy
 ```
 
 ## Install
 
-The installer asks which implementation agent(s) to use:
+Run the installer:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
 
-You can also set `FRUGAL_AGENT` to skip the prompt:
+The interactive prompt will ask:
+1. **Which is your main handler?** (Claude, agy, or Codex)
+2. **Install helper agents?** (for delegation/fallback)
+3. **Deploy CLAUDE.md anyway?** (if Claude is not your main handler, you can still install its rules for occasional use)
+
+### Non-interactive Installation
+
+You can set environment variables to skip the prompts:
 
 ```bash
-# Codex only
-FRUGAL_AGENT=1 bash install.sh
+# Claude main + agy helper
+FRUGAL_MAIN=claude FRUGAL_HELPERS=agy bash install.sh
 
-# agy only
-FRUGAL_AGENT=2 bash install.sh
+# agy main, no helpers
+FRUGAL_MAIN=agy FRUGAL_HELPERS=none bash install.sh
 
-# Both
-FRUGAL_AGENT=3 bash install.sh
+# Codex main + Claude helper
+FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 ```
 
-The installer configures:
+## Configuration (Post-Install)
 
-- Missing CLIs using official install paths (set `FRUGAL_SKIP_CLI_INSTALL=1` to skip)
-- Claude Code default model: `sonnet`
-- Codex default model and reasoning effort (if Codex selected)
-- The `usage` command for quota monitoring
-- Claude Code statusline with remaining quota and current session cost
-- `~/.codex/AGENTS.md` for Codex standalone fallback (if Codex selected)
-- `~/.gemini/config/AGENTS.md` for agy standalone fallback (if agy selected)
+If you want to change your main handler or helpers later, use the included config utility instead of running the full installer again:
 
-No manual `/model` command is needed for normal work. For complex planning, Claude recommends Opus and only switches after user approval.
-
-## How To Use It
-
-Natural language is the default interface.
-
-```text
-"Plan this feature."
-"Now implement it."
-"Review the code."
-"Update the docs."
-"Run checks, commit, and push."
+```bash
+frugal-config                    # Interactive menu
+frugal-config --main agy         # Change main handler
+frugal-config --helpers claude   # Change helpers
 ```
 
-Claude decides whether the current request is planning, implementation, review, docs, or shipping, and delegates to the appropriate agent.
-
-## What Claude Does Not Do
-
-Claude does not normally edit code directly.
-
-- Code implementation → implementation agent
-- Code review → implementation agent
-- Commit messages → implementation agent
-- Commit/push → implementation agent
-
-If the implementation agent is exhausted and Claude needs to act as a fallback, the user must explicitly approve. Fallback edits should stay narrow and easy to audit.
+This will save your preferences to `~/.frugal-harness/config.sh` and automatically regenerate your rules.
 
 ## Model Routing
 
 The default rule is to use the cheapest capable path, then escalate only when planning quality matters.
 
-- Normal planning and orchestration: Claude Sonnet
-- Complex planning: Claude recommends Opus, then waits for user approval
+- Normal planning and orchestration: Default models (`sonnet`, `gpt-5.5`, or `gemini-3.5-flash`)
+- Complex planning: The main handler recommends escalating to an advanced reasoning model, then waits for user approval
 
 A task counts as complex planning when it likely involves:
-
 - 10 or more files
 - Architecture, DB schema, or API design changes
 - Cross-module dependency analysis
@@ -148,7 +127,7 @@ A task counts as complex planning when it likely involves:
 
 ### agy model selection
 
-When Claude delegates to agy, it picks a model based on task complexity:
+When agy is used (either as main or helper), it picks a model based on task complexity:
 
 | Task | Model |
 |---|---|
@@ -160,68 +139,44 @@ When Claude delegates to agy, it picks a model based on task complexity:
 
 ### Codex reasoning effort
 
-If Codex is installed, default reasoning is `medium` for both planning and implementation. For complex standalone planning, the harness recommends rerunning with `high` or `xhigh`.
+When Codex is used, default reasoning is `medium` for both planning and implementation. For complex planning, the harness recommends rerunning with `high` or `xhigh`.
 
 ## Quality Gate
 
 The harness is not web-only. The implementation agent first discovers the project's standard verification commands, then runs checks that match the stack and the change.
 
 Places to inspect first:
-
 - README
 - CI config
 - Makefile, Justfile, Taskfile
 - `package.json`
 - `pyproject.toml`, `tox.ini`, `noxfile.py`
-- `Cargo.toml`
-- `go.mod`
-- `pom.xml`, `build.gradle`
+- `Cargo.toml`, `go.mod`, `pom.xml`, `build.gradle`
 
-For code changes, run the relevant layers when available:
+For code changes, run the relevant layers when available: build/compile, tests, lint, format check, type check.
 
-- build/compile
-- tests
-- static analysis/lint
-- format check
-- type/static correctness
+For docs or config-only changes, run affected validation instead of the full test suite. If a relevant command cannot be found or cannot run, the final report must say what was skipped, why, and what manual review was done instead.
 
-Examples:
+## Rules Structure
 
-| Ecosystem | Typical checks |
+The generated `AGENTS.md` files are auto-generated output. Do not edit them directly.
+
+| Generated file | Role |
 |---|---|
-| Node/TypeScript | `npm test`, `npm run lint`, `npm run build`, `tsc --noEmit` |
-| Python | `pytest`, `ruff check`, `ruff format --check`, `mypy` or `pyright` |
-| Go | `go test ./...`, `go vet ./...`, `gofmt` |
-| Rust | `cargo test`, `cargo check`, `cargo clippy` |
-
-For docs or config-only changes, run affected validation instead of the full test suite: Markdown checks, JSON/YAML/TOML parsing, shell syntax checks, or generation scripts.
-
-If a relevant command cannot be found or cannot run, the final report must say what was skipped, why, and what manual review was done instead.
-
-## AGENTS.md Structure
-
-The generated AGENTS.md files are auto-generated output. Do not edit them directly.
-
-| Generated file | Agent |
-|---|---|
-| `~/.codex/AGENTS.md` | Codex standalone fallback |
-| `~/.gemini/config/AGENTS.md` | agy standalone fallback |
+| `~/.claude/CLAUDE.md` | Claude Code rules |
+| `~/.codex/AGENTS.md` | Codex rules (main handler or helper depending on config) |
+| `~/.gemini/config/AGENTS.md` | agy rules (main handler or helper depending on config) |
 
 Source files:
 
 | File | Role |
 |---|---|
-| `CLAUDE.md` | Claude role and delegation rules |
 | `shared/harness-core.md` | Shared policy across all agents |
-| `shared/codex-wrapper.md` | Codex standalone/relay rules |
-| `shared/agy-wrapper.md` | agy standalone/relay rules |
-| `scripts/sync-agents.sh` | Regenerates AGENTS.md from shared sources |
+| `shared/codex-wrapper-main.md` | Codex standalone rules |
+| `shared/codex-wrapper-helper.md` | Codex relay rules |
+| `shared/agy-wrapper-*.md` | agy rules (main/helper) |
 
-To change policy, edit the shared source files, then run:
-
-```bash
-scripts/sync-agents.sh
-```
+To change policy, edit the shared source files, then run `frugal-config` to regenerate.
 
 ## Usage Dashboard
 
@@ -229,15 +184,9 @@ scripts/sync-agents.sh
 usage
 ```
 
-Inside Claude Code, run it through the shell:
+Inside Claude Code, run it through the shell: `! usage`
 
-```bash
-! usage
-```
-
-`usage` shows Claude and implementation agent usage in one place.
-
-The dashboard is powered by Node.js and does not require `jq`. Codex usage is selected from the newest `token_count` event across all local rollout logs, not from the newest file timestamp.
+`usage` shows Claude and implementation agent usage in one place. The dashboard is powered by Node.js and does not require `jq`. Codex usage is selected from the newest `token_count` event across all local rollout logs.
 
 ## Uninstall
 

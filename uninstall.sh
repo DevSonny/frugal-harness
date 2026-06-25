@@ -23,6 +23,9 @@ fi
 
 echo "This will backup and remove:"
 [ -f "$CLAUDE_MD" ] && echo "  $CLAUDE_MD"
+[ -f "$HOME/.codex/AGENTS.md" ] && echo "  $HOME/.codex/AGENTS.md"
+[ -f "$HOME/.gemini/config/AGENTS.md" ] && echo "  $HOME/.gemini/config/AGENTS.md"
+[ -d "$HOME/.frugal-harness" ] && echo "  $HOME/.frugal-harness/"
 for skill_name in "${SKILLS[@]}"; do
   [ -f "$SKILLS_DIR/${skill_name}.md" ] && echo "  $SKILLS_DIR/${skill_name}.md"
 done
@@ -34,6 +37,23 @@ if [ -f "$CLAUDE_MD" ]; then
   cp "$CLAUDE_MD" "${CLAUDE_MD}${BACKUP_SUFFIX}"
   rm "$CLAUDE_MD"
   echo "  ↩ Backed up and removed CLAUDE.md"
+fi
+
+if [ -f "$HOME/.codex/AGENTS.md" ]; then
+  cp "$HOME/.codex/AGENTS.md" "${HOME}/.codex/AGENTS.md${BACKUP_SUFFIX}"
+  rm "$HOME/.codex/AGENTS.md"
+  echo "  ↩ Backed up and removed ~/.codex/AGENTS.md"
+fi
+
+if [ -f "$HOME/.gemini/config/AGENTS.md" ]; then
+  cp "$HOME/.gemini/config/AGENTS.md" "${HOME}/.gemini/config/AGENTS.md${BACKUP_SUFFIX}"
+  rm "$HOME/.gemini/config/AGENTS.md"
+  echo "  ↩ Backed up and removed ~/.gemini/config/AGENTS.md"
+fi
+
+if [ -d "$HOME/.frugal-harness" ]; then
+  rm -rf "$HOME/.frugal-harness"
+  echo "  ↩ Removed ~/.frugal-harness/"
 fi
 
 for skill_name in "${SKILLS[@]}"; do
@@ -60,6 +80,10 @@ fi
 if [ -L "$BIN_DIR/usage" ] || [ -f "$BIN_DIR/usage" ]; then
   rm -f "$BIN_DIR/usage"
   echo "  ↩ Removed $BIN_DIR/usage"
+fi
+if [ -L "$BIN_DIR/frugal-config" ] || [ -f "$BIN_DIR/frugal-config" ]; then
+  rm -f "$BIN_DIR/frugal-config"
+  echo "  ↩ Removed $BIN_DIR/frugal-config"
 fi
 
 # Remove PreToolUse hook from Claude settings
