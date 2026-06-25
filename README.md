@@ -19,13 +19,13 @@ You open Claude Code and speak naturally. The harness rules decide which agent h
 
 ## Why Split The Roles?
 
-Most AI coding setups assume a $100/mo plan. frugal-harness is built around cheaper subscriptions:
+Most AI coding setups assume a $100/mo plan. But frugal-harness is built around cheaper subscription combinations:
 
 | Setup | Monthly cost |
 |---|---|
 | Claude Pro + Codex (ChatGPT Plus) | ~$40/mo |
-| Claude Pro + agy | ~$20/mo + agy subscription |
-| Claude Pro + both | ~$40/mo + agy subscription |
+| Claude Pro + agy | ~$40/mo |
+| Claude Pro + both | ~$60/mo |
 
 Claude is most efficient when it focuses on planning and orchestration. Implementation, code review, commits, and pushes are delegated to an implementation agent that is better suited for those tasks.
 
@@ -36,7 +36,7 @@ This keeps Claude session quota out of routine code editing and uses each tool w
 | Agent | Role |
 |---|---|
 | Claude Code | Planning and orchestration (default `sonnet`, Opus only for complex plans) |
-| Codex CLI | Implementation, code review, commit, push (if installed) |
+| Codex CLI | Implementation, code review, commit, push, documentation (if installed) |
 | Antigravity CLI (agy) | Implementation, code review, commit, push, documentation (if installed) |
 
 Claude does not normally edit code directly. Code implementation and code review are delegated to the installed implementation agent(s).
@@ -130,8 +130,6 @@ Claude does not normally edit code directly.
 - Commit/push → implementation agent
 
 If the implementation agent is exhausted and Claude needs to act as a fallback, the user must explicitly approve. Fallback edits should stay narrow and easy to audit.
-
-Documentation goes to agy first (if installed). If agy is unavailable, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
 
 ## Model Routing
 
