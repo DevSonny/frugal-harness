@@ -8,43 +8,44 @@
   <strong>DevSonny</strong>
 </p>
 
-frugal-harness is a low-cost coding harness that combines Claude Pro, ChatGPT Plus, and Antigravity CLI so the whole development loop can run without a $100/mo setup.
+frugal-harness is a low-cost AI coding harness that keeps the whole development loop — plan, implement, review, commit, push — running on affordable subscriptions instead of a $100/mo setup.
 
-The core idea is role separation.
+The core idea is **role separation**:
 
-- Claude Code plans and orchestrates.
-- Codex CLI implements, reviews code, commits, and pushes.
-- Antigravity CLI writes long-form docs such as READMEs, changelogs, and API documentation.
+- **Claude Code** plans and orchestrates.
+- An **implementation agent** (Codex CLI or Antigravity CLI) implements, reviews, commits, and pushes.
 
-In normal use, you open Claude Code and speak naturally. The harness rules decide which CLI should handle each stage behind the scenes.
+You open Claude Code and speak naturally. The harness rules decide which agent handles each stage behind the scenes.
 
 ## Why Split The Roles?
 
-Most AI coding setups assume a $100/mo plan. frugal-harness is designed around **Claude Pro ($20/mo)** and **ChatGPT Plus ($20/mo)**, with documentation work delegated to Antigravity CLI.
+Most AI coding setups assume a $100/mo plan. frugal-harness is built around cheaper subscriptions:
 
-**Total: $40/mo** as the baseline.
+| Setup | Monthly cost |
+|---|---|
+| Claude Pro + Codex (ChatGPT Plus) | ~$40/mo |
+| Claude Pro + agy | ~$20/mo + agy subscription |
+| Claude Pro + both | ~$40/mo + agy subscription |
 
-Claude is most efficient when it focuses on planning and orchestration. Codex is better suited for implementation, code review, commits, and pushes. Antigravity is useful for long, repetitive documentation tasks.
+Claude is most efficient when it focuses on planning and orchestration. Implementation, code review, commits, and pushes are delegated to an implementation agent that is better suited for those tasks.
 
 This keeps Claude session quota out of routine code editing and uses each tool where it is strongest.
 
 ## Agent Roles
 
-| Tool | Model/settings | Role |
-|---|---|---|
-| Claude Code | `sonnet` by default, Opus only when recommended for complex plans | Planning and orchestration |
-| Codex CLI | `gpt-5.5`, plan `medium`, implementation `medium` | Implementation, code review, commit, push |
-| Antigravity CLI | default configured | README, changelog, API docs, long-form writing |
+| Agent | Role |
+|---|---|
+| Claude Code | Planning and orchestration (default `sonnet`, Opus only for complex plans) |
+| Codex CLI | Implementation, code review, commit, push (if installed) |
+| Antigravity CLI (agy) | Implementation, code review, commit, push, documentation (if installed) |
 
-Claude does not normally edit code directly. Code implementation and code review belong to Codex.
+Claude does not normally edit code directly. Code implementation and code review are delegated to the installed implementation agent(s).
 
 ## Prerequisites
 
 ### 1. Node.js and npm
 
-frugal-harness uses Node.js to parse local JSON/JSONL usage files without requiring `jq`. The Codex and Antigravity official install paths also use npm or native curl scripts.
-
-Install Node.js first if you do not already have it:
+frugal-harness uses Node.js to parse local JSON/JSONL usage files without requiring `jq`.
 
 ```bash
 # macOS
@@ -58,45 +59,50 @@ sudo apt install nodejs npm
 
 The installer can install missing CLIs automatically using official install paths:
 
-| CLI | Install path used by frugal-harness |
+| CLI | Install path |
 |---|---|
 | Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` |
 | Codex CLI | `npm install -g @openai/codex` |
 | Antigravity CLI | `curl -fsSL https://antigravity.google/cli/install.sh \| bash` |
 
-After installation, log in:
+After installation, log in to the CLIs you chose:
 
 ```bash
-claude login
-codex login
-```
-
-Antigravity CLI requires you to login with your subscription.
-
-```bash
-agy login
-agy -p 'say hi'
+claude login        # always required
+codex login         # if using Codex
+agy login           # if using agy
 ```
 
 ## Install
+
+The installer asks which implementation agent(s) to use:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/DevSonny/frugal-harness/main/install.sh | bash
 ```
 
+You can also set `FRUGAL_AGENT` to skip the prompt:
+
+```bash
+# Codex only
+FRUGAL_AGENT=1 bash install.sh
+
+# agy only
+FRUGAL_AGENT=2 bash install.sh
+
+# Both
+FRUGAL_AGENT=3 bash install.sh
+```
+
 The installer configures:
 
-- missing Claude/Codex/agy CLIs using official install paths
+- Missing CLIs using official install paths (set `FRUGAL_SKIP_CLI_INSTALL=1` to skip)
 - Claude Code default model: `sonnet`
-- Codex default model: `gpt-5.5`
-- Codex reasoning: planning `medium`, implementation `medium`
-- agy default model configured
-- the `usage` command
+- Codex default model and reasoning effort (if Codex selected)
+- The `usage` command for quota monitoring
 - Claude Code statusline with remaining quota and current session cost
-- a PreToolUse guard that blocks Claude from editing source files directly
-- `~/.codex/AGENTS.md` for Codex standalone fallback
-
-Set `FRUGAL_SKIP_CLI_INSTALL=1` before running the installer if you want it to only check for missing CLIs and never install them.
+- `~/.codex/AGENTS.md` for Codex standalone fallback (if Codex selected)
+- `~/.gemini/config/AGENTS.md` for agy standalone fallback (if agy selected)
 
 No manual `/model` command is needed for normal work. For complex planning, Claude recommends Opus and only switches after user approval.
 
@@ -118,14 +124,14 @@ Claude decides whether the current request is planning, implementation, review, 
 
 Claude does not normally edit code directly.
 
-- Code implementation: Codex | agy
-- Code review: Codex | agy
-- Commit messages: Codex | agy
-- Commit/push: Codex | agy
+- Code implementation → implementation agent
+- Code review → implementation agent
+- Commit messages → implementation agent
+- Commit/push → implementation agent
 
-If both Codex and agy are exhausted and Claude needs to act as an implementation fallback, the user must explicitly approve that specific fallback. The source-edit guard stays enabled by default, and fallback edits should stay narrow and easy to audit.
+If the implementation agent is exhausted and Claude needs to act as a fallback, the user must explicitly approve. Fallback edits should stay narrow and easy to audit.
 
-Documentation goes to agy first. If agy fails or is out of quota, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
+Documentation goes to agy first (if installed). If agy is unavailable, Codex is the fallback. Claude may edit documentation directly only as the final fallback.
 
 ## Model Routing
 
@@ -133,22 +139,34 @@ The default rule is to use the cheapest capable path, then escalate only when pl
 
 - Normal planning and orchestration: Claude Sonnet
 - Complex planning: Claude recommends Opus, then waits for user approval
-- Codex standalone planning: `plan_mode_reasoning_effort = "medium"`
-- Codex implementation: `model_reasoning_effort = "medium"`
-- Complex Codex standalone planning: recommend rerunning with `high`
-- Very complex Codex standalone planning: recommend rerunning with `xhigh`
 
 A task counts as complex planning when it likely involves:
 
 - 10 or more files
-- architecture, DB schema, or API design changes
-- cross-module dependency analysis
-- a broad refactor
-- judgment-heavy structure or design decisions
+- Architecture, DB schema, or API design changes
+- Cross-module dependency analysis
+- A broad refactor
+- Judgment-heavy structure or design decisions
+
+### agy model selection
+
+When Claude delegates to agy, it picks a model based on task complexity:
+
+| Task | Model |
+|---|---|
+| Quick implementation / simple fix | `Gemini 3.5 Flash (Medium)` |
+| Complex implementation | `Gemini 3.1 Pro (High)` or `Claude Sonnet 4.6 (Thinking)` |
+| Architecture / judgment-heavy | `Claude Opus 4.6 (Thinking)` |
+| Documentation / README | `Gemini 3.5 Flash (Low)` |
+| Code review | `Gemini 3.1 Pro (Low)` |
+
+### Codex reasoning effort
+
+If Codex is installed, default reasoning is `medium` for both planning and implementation. For complex standalone planning, the harness recommends rerunning with `high` or `xhigh`.
 
 ## Quality Gate
 
-The harness is not web-only. Codex first discovers the project's standard verification commands, then runs checks that match the stack and the change.
+The harness is not web-only. The implementation agent first discovers the project's standard verification commands, then runs checks that match the stack and the change.
 
 Places to inspect first:
 
@@ -184,19 +202,24 @@ If a relevant command cannot be found or cannot run, the final report must say w
 
 ## AGENTS.md Structure
 
-`~/.codex/AGENTS.md` is generated output. Do not edit it directly.
+The generated AGENTS.md files are auto-generated output. Do not edit them directly.
+
+| Generated file | Agent |
+|---|---|
+| `~/.codex/AGENTS.md` | Codex standalone fallback |
+| `~/.gemini/config/AGENTS.md` | agy standalone fallback |
 
 Source files:
 
 | File | Role |
 |---|---|
 | `CLAUDE.md` | Claude role and delegation rules |
-| `shared/harness-core.md` | Shared policy for Claude and Codex |
+| `shared/harness-core.md` | Shared policy across all agents |
 | `shared/codex-wrapper.md` | Codex standalone/relay rules |
 | `shared/agy-wrapper.md` | agy standalone/relay rules |
-| `scripts/sync-agents.sh` | Regenerates `~/.codex/AGENTS.md` from shared sources |
+| `scripts/sync-agents.sh` | Regenerates AGENTS.md from shared sources |
 
-To change Codex policy, edit `shared/harness-core.md` or `shared/codex-wrapper.md`, then run:
+To change policy, edit the shared source files, then run:
 
 ```bash
 scripts/sync-agents.sh
@@ -214,7 +237,7 @@ Inside Claude Code, run it through the shell:
 ! usage
 ```
 
-`usage` shows Claude, Codex, and Antigravity usage in one place.
+`usage` shows Claude and implementation agent usage in one place.
 
 The dashboard is powered by Node.js and does not require `jq`. Codex usage is selected from the newest `token_count` event across all local rollout logs, not from the newest file timestamp.
 

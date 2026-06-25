@@ -41,9 +41,9 @@ This is a soft preference, not a hard block. The user can ask Claude to edit dir
 - Web search and research: Codex (`codex exec "<research question>" < /dev/null`) or agy first — both have web search and preserve Claude's context budget.
 
 ## Workflow Order
-Natural language is the primary interface. Slash commands are optional shortcuts for:
+Natural language is the primary interface. Claude determines the current stage and delegates accordingly:
 
-`/plan` (Claude) -> `/exec` (Codex | agy) -> `/review` (Codex | agy) -> `/docs` (Gemini -> Codex | agy -> Claude) -> `/ship` (Codex | agy)
+Plan (Claude) -> Implement (Codex | agy) -> Review (Codex | agy) -> Docs (agy -> Codex -> Claude) -> Ship (Codex | agy)
 
 ## Fallback
 - If Codex and agy are both unavailable (quota exhausted or not installed), Claude may edit source files directly only after a manual `usage` check and explicit user approval for the affected stage.
