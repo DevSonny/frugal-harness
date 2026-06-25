@@ -337,19 +337,14 @@ fi
 echo "✅ frugal-harness installed!"
 echo ""
 echo ""
-echo "Agents & models:"
-echo "  /plan    → Claude Code  sonnet               (recommend Opus only for complex plans)"
+echo "Configured Agents:"
+echo "  Planner      → Claude Code (sonnet)"
 if [ "$INSTALL_CODEX" = "1" ]; then
-  echo "  /exec    → Codex CLI    gpt-5.5              (build, medium effort)"
-  echo "  /review  → Codex CLI    gpt-5.5              (review, medium effort)"
-  echo "  /ship    → Codex CLI    gpt-5.5              (commit & push, medium effort)"
+  echo "  Executor     → Codex CLI (gpt-5.5)"
 fi
 if [ "$INSTALL_AGY" = "1" ]; then
-  echo "  /exec    → agy                               (antigravity CLI, build)"
-  echo "  /review  → agy                               (antigravity CLI, review)"
-  echo "  /ship    → agy                               (antigravity CLI, commit & push)"
+  echo "  Executor     → agy"
 fi
-echo "  /docs    → Gemini CLI   (not configured)"
 echo ""
 if [ "$INSTALL_CODEX" = "1" ] && [ "$INSTALL_AGY" = "1" ]; then
   echo "Total cost: ~\$40/mo (Claude Pro + ChatGPT Plus) + agy subscription"
