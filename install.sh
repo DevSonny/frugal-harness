@@ -203,6 +203,7 @@ SHARED_DIR="$HOME/.claude/shared"
 CLAUDE_SCRIPTS_DIR="$HOME/.claude/scripts"
 CLAUDE_MD="$HOME/.claude/CLAUDE.md"
 CODEX_AGENTS="$HOME/.codex/AGENTS.md"
+AGY_AGENTS="$HOME/.gemini/config/AGENTS.md"
 BACKUP_SUFFIX=".bak.$(date +%Y%m%d%H%M%S)"
 
 # Backup existing files
@@ -214,6 +215,11 @@ fi
 if [ "$INSTALL_CODEX" = "1" ] && [ -f "$CODEX_AGENTS" ]; then
   cp "$CODEX_AGENTS" "${CODEX_AGENTS}${BACKUP_SUFFIX}"
   echo "  ↩ Backed up existing AGENTS.md"
+fi
+
+if [ "$INSTALL_AGY" = "1" ] && [ -f "$AGY_AGENTS" ]; then
+  cp "$AGY_AGENTS" "${AGY_AGENTS}${BACKUP_SUFFIX}"
+  echo "  ↩ Backed up existing AGENTS.md (agy)"
 fi
 
 # Create Claude runtime dirs
@@ -260,7 +266,11 @@ SYNC_SCRIPT="$CLAUDE_SCRIPTS_DIR/sync-agents.sh"
 if [ -f "$SYNC_SCRIPT" ]; then
   cp "$SYNC_SCRIPT" "${SYNC_SCRIPT}${BACKUP_SUFFIX}"
 fi
-curl -fsSL "$REPO_RAW/scripts/sync-agents.sh" -o "$SYNC_SCRIPT"
+if [ -f "$SCRIPT_DIR/scripts/sync-agents.sh" ]; then
+  cp "$SCRIPT_DIR/scripts/sync-agents.sh" "$SYNC_SCRIPT"
+else
+  curl -fsSL "$REPO_RAW/scripts/sync-agents.sh" -o "$SYNC_SCRIPT"
+fi
 chmod +x "$SYNC_SCRIPT"
 
 # Install usage scripts (guard-code-edit.sh is intentionally excluded)
@@ -312,9 +322,15 @@ if [ "$INSTALL_CODEX" = "1" ]; then
   set_toml_root_key "$CODEX_CONFIG" "plan_mode_reasoning_effort" "medium"
   echo "  ✓ Codex default model: gpt-5.5 (plan medium, implementation medium)"
 
-  # Build Codex standalone harness
-  "$SYNC_SCRIPT"
+fi
+
+# Build standalone harnesses
+"$SYNC_SCRIPT"
+if [ "$INSTALL_CODEX" = "1" ]; then
   echo "  ✓ Codex AGENTS.md generated"
+fi
+if [ "$INSTALL_AGY" = "1" ]; then
+  echo "  ✓ agy AGENTS.md generated"
 fi
 
 
