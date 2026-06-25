@@ -227,30 +227,6 @@ function agyStats() {
   return { model: cfg.model || "?", short: shrinkAgyModel(cfg.model) };
 }
 
-function agyUsageStats() {
-  const tmpRoot = path.join(HOME, ".gemini", "tmp");
-  const cutoff7d = Date.now() - 7 * 86400 * 1000;
-  const gemini  = { in: 0, out: 0, thoughts: 0, msgs: 0 };
-  const nonGoogle = { in: 0, out: 0, thoughts: 0, msgs: 0 };
-
-  for (const file of walkFiles(tmpRoot, (f) => path.basename(f).startsWith("session-") && f.endsWith(".json"))) {
-    const session = readJson(file);
-    if (!session || !Array.isArray(session.messages)) continue;
-    for (const msg of session.messages) {
-      if (!msg.tokens || !msg.model) continue;
-      const ts = Date.parse(msg.timestamp || "");
-      if (!Number.isFinite(ts) || ts < cutoff7d) continue;
-      const t = msg.tokens;
-      const bucket = msg.model.toLowerCase().startsWith("gemini") ? gemini : nonGoogle;
-      bucket.in  += Number(t.input    || 0);
-      bucket.out += Number(t.output   || 0);
-      bucket.thoughts += Number(t.thoughts || 0);
-      bucket.msgs += 1;
-    }
-  }
-
-  return { gemini, nonGoogle };
-}
 
 function codexEffectiveLeft(codex) {
   if (codex.primaryReset && codex.primaryReset < Date.now() / 1000) return 100;
@@ -368,15 +344,9 @@ function printDashboard() {
 
   console.log("");
   if (agy) {
-    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model} · exact: /usage)${C.rs}`);
+    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model})${C.rs}`);
     console.log(`   Model:  ${C.mg}${agy.short}${C.rs}  ${C.dm}(change: agy → /model)${C.rs}`);
-    const aStats = agyUsageStats();
-    if (aStats && aStats.gemini.msgs > 0) {
-      console.log(`   ${C.dm}Gemini 7d:  in ${fmtK(aStats.gemini.in)} / out ${fmtK(aStats.gemini.out)} / think ${fmtK(aStats.gemini.thoughts)}  (${aStats.gemini.msgs} msgs)${C.rs}`);
-    }
-    if (aStats && aStats.nonGoogle.msgs > 0) {
-      console.log(`   ${C.dm}Non-G 7d:   in ${fmtK(aStats.nonGoogle.in)} / out ${fmtK(aStats.nonGoogle.out)} / think ${fmtK(aStats.nonGoogle.thoughts)}  (${aStats.nonGoogle.msgs} msgs)${C.rs}`);
-    }
+    console.log(`   ${C.dm}Usage:  Run /usage inside agy to view live quota limits${C.rs}`);
   } else {
     console.log(`${C.cy}agy${C.rs}  ${C.dm}(not configured)${C.rs}`);
   }
