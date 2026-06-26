@@ -99,6 +99,27 @@ FRUGAL_MAIN=agy FRUGAL_HELPERS=none bash install.sh
 FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 ```
 
+## Optional Claude Code Skills
+
+The installer prompts you to install these after the main setup:
+
+| Skill | Recommendation | What it does |
+|---|---|---|
+| **caveman** | ★ Strongly recommended | Cuts Claude's token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
+| **grill-me** | Recommended | Relentless Socratic interview to stress-test a plan before coding. Catches gaps early, saves tokens on rework. |
+
+To install non-interactively:
+
+```bash
+FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_GRILLME=1 bash install.sh
+```
+
+Or install caveman anytime:
+
+```bash
+claude plugin install caveman
+```
+
 ## Configuration (Post-Install)
 
 If you want to change your main handler or helpers later, use the included config utility instead of running the full installer again:

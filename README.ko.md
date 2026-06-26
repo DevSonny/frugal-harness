@@ -99,6 +99,27 @@ FRUGAL_MAIN=agy FRUGAL_HELPERS=none bash install.sh
 FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 ```
 
+## 선택 Claude Code 스킬
+
+설치 완료 후 인스톨러가 아래 스킬 설치 여부를 묻습니다:
+
+| 스킬 | 추천 | 설명 |
+|---|---|---|
+| **caveman** | ★ 강력 추천 | Claude 출력 토큰을 최대 75% 절감. 기술적 내용 그대로, 응답만 훨씬 짧아짐. |
+| **grill-me** | 추천 | 계획/설계를 코딩 전에 집요하게 검증하는 소크라테스식 인터뷰. 사전에 허점을 잡아 재작업 토큰 절약. |
+
+non-interactive 설치:
+
+```bash
+FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_GRILLME=1 bash install.sh
+```
+
+caveman 단독 설치:
+
+```bash
+claude plugin install caveman
+```
+
 ## 환경 설정 (설치 후)
 
 나중에 메인 핸들러나 헬퍼를 변경하고 싶다면, 인스톨러를 다시 실행할 필요 없이 내장된 config 유틸리티를 사용하세요:
