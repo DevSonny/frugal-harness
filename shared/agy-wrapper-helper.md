@@ -17,16 +17,21 @@ agy --model "<model>" -p "<task description with file path, tech stack, and done
 |------|------|
 | 빠른 구현 / 간단한 수정 | `Gemini 3.5 Flash (Medium)` |
 | 복잡한 구현 | `Gemini 3.1 Pro (High)` 또는 `Claude Sonnet 4.6 (Thinking)` |
-| 아키텍처 / 판단이 많은 작업 | `Claude Opus 4.8 (Thinking)` |
+| 아키텍처 / 판단이 많은 작업 | `Claude Opus 4.6 (Thinking)` |
 | 문서 / README / changelog | `Gemini 3.5 Flash (Low)` |
 | 리뷰 | `Gemini 3.1 Pro (Low)` |
 
 Available models (from `agy models`):
-- `Gemini 3.5 Flash (Low/Medium/High)` — Gemini 쿼터
-- `Gemini 3.1 Pro (Low/High)` — Gemini 쿼터
+- `Gemini 3.5 Flash (Low)` — Gemini 쿼터
+- `Gemini 3.5 Flash (Medium)` — Gemini 쿼터
+- `Gemini 3.5 Flash (High)` — Gemini 쿼터
+- `Gemini 3.1 Pro (Low)` — Gemini 쿼터
+- `Gemini 3.1 Pro (High)` — Gemini 쿼터
 - `Claude Sonnet 4.6 (Thinking)` — 비구글 쿼터
-- `Claude Opus 4.8 (Thinking)` — 비구글 쿼터
+- `Claude Opus 4.6 (Thinking)` — 비구글 쿼터
 - ~~`GPT-OSS 120B (Medium)`~~ — 사용 금지 (오픈소스 모델)
+
+> **중요:** `--model` 값은 위 목록과 **정확히 일치**해야 함 (대소문자 구분, 괄호 포함). 틀리거나 약어(`"sonnet"`, `"opus"` 등)를 쓰면 오류 없이 `Gemini 3.5 Flash (Medium)`으로 폴백됨. 확인: `agy models`
 
 > Gemini 모델과 Claude 모델은 사용량 측정 쿼터가 다름. 쿼터 절감 시 Gemini 모델 우선 사용.
 

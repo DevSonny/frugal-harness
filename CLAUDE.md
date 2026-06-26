@@ -26,9 +26,10 @@ Use whichever agent(s) are installed; delegate to Claude directly only when none
 - **agy** (if installed): `agy --model "<model>" -p "<task description with file path and done-criteria>"`
   - 빠른 구현/수정: `"Gemini 3.5 Flash (Medium)"` (Gemini 쿼터)
   - 복잡한 구현: `"Gemini 3.1 Pro (High)"` 또는 `"Claude Sonnet 4.6 (Thinking)"`
-  - 아키텍처/판단: `"Claude Opus 4.8 (Thinking)"` (비구글 쿼터)
+  - 아키텍처/판단: `"Claude Opus 4.6 (Thinking)"` (비구글 쿼터)
   - 문서/README: `"Gemini 3.5 Flash (Low)"` (Gemini 쿼터)
   - `"GPT-OSS 120B (Medium)"` 사용 금지 (오픈소스 모델)
+  - **주의:** 모델명은 `agy models` 출력과 정확히 일치해야 함 (대소문자 구분). 약어나 오타 시 오류 없이 `Gemini 3.5 Flash (Medium)`으로 폴백됨.
 - Both installed: choose based on task or user preference — either is valid.
 - Neither installed: ask the user for approval before editing source files directly.
 
