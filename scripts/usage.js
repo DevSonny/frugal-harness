@@ -344,7 +344,7 @@ function printDashboard() {
 
   console.log("");
   if (agy) {
-    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model})${C.rs}`);
+    console.log(`${C.cy}agy${C.rs}  ${C.dm}(${agy.model} · exact: /usage)${C.rs}`);
     console.log(`   Model:  ${C.mg}${agy.short}${C.rs}  ${C.dm}(change: agy → /model)${C.rs}`);
     console.log(`   ${C.dm}Usage:  Run /usage inside agy to view live quota limits${C.rs}`);
   } else {
