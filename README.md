@@ -99,14 +99,14 @@ FRUGAL_MAIN=agy FRUGAL_HELPERS=none bash install.sh
 FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 ```
 
-## Optional Claude Code Skills
+## Optional Skills
 
 The installer prompts you to install these after the main setup:
 
-| Skill | Recommendation | What it does |
-|---|---|---|
-| **caveman** | ★ Strongly recommended | Cuts Claude's token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
-| **grill-me** | Recommended | Relentless Socratic interview to stress-test a plan before coding. Catches gaps early, saves tokens on rework. |
+| Skill | Agents | Recommendation | What it does |
+|---|---|---|---|
+| **caveman** | Claude Code, Codex, agy | ★ Strongly recommended | Cuts token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
+| **grill-me** | Claude Code, Codex, agy | Recommended | Relentless Socratic interview to stress-test a plan before coding. Catches gaps early, saves tokens on rework. |
 
 To install non-interactively:
 

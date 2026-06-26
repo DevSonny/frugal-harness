@@ -99,14 +99,14 @@ FRUGAL_MAIN=agy FRUGAL_HELPERS=none bash install.sh
 FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 ```
 
-## 선택 Claude Code 스킬
+## 선택 스킬
 
 설치 완료 후 인스톨러가 아래 스킬 설치 여부를 묻습니다:
 
-| 스킬 | 추천 | 설명 |
-|---|---|---|
-| **caveman** | ★ 강력 추천 | Claude 출력 토큰을 최대 75% 절감. 기술적 내용 그대로, 응답만 훨씬 짧아짐. |
-| **grill-me** | 추천 | 계획/설계를 코딩 전에 집요하게 검증하는 소크라테스식 인터뷰. 사전에 허점을 잡아 재작업 토큰 절약. |
+| 스킬 | 지원 에이전트 | 추천 | 설명 |
+|---|---|---|---|
+| **caveman** | Claude Code, Codex, agy | ★ 강력 추천 | Claude 출력 토큰을 최대 75% 절감. 기술적 내용 그대로, 응답만 훨씬 짧아짐. |
+| **grill-me** | Claude Code, Codex, agy | 추천 | 계획/설계를 코딩 전에 집요하게 검증하는 소크라테스식 인터뷰. 사전에 허점을 잡아 재작업 토큰 절약. |
 
 non-interactive 설치:
 
