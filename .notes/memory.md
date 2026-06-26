@@ -1,5 +1,26 @@
 # frugal-harness memory
 
+## 2026-06-26 — install.sh 테스트 주석 추가
+
+### 완료된 작업
+- `install.sh` 파일 맨 마지막 줄에 `# agy-test` 주석 추가
+
+## 2026-06-25 — 메인 핸들러 선택 기능 도입 (Claude / agy / Codex)
+
+### 완료된 작업
+- 사용자가 Claude, agy, Codex 중 하나를 "메인 핸들러"로 선택할 수 있도록 `install.sh` 개편
+- `install.sh` 파이프 실행(`curl | bash`) 시 입력을 받지 못하는 버그 수정 (`/dev/tty` 사용)
+- `~/.frugal-harness/config.sh`에 설정 저장 로직 추가
+- 설치 후 재설정을 위한 `scripts/frugal-config.sh` 명령어 추가
+- `shared/agy-wrapper.md`와 `shared/codex-wrapper.md`를 각각 `-main.md`와 `-helper.md`로 분리하여 역할에 맞는 규칙 제공
+- `sync-agents.sh`가 `config.sh`를 읽어 메인/헬퍼 여부에 따라 알맞은 `AGENTS.md`를 생성하도록 재작성
+- `README.md` 및 `README.ko.md`에 새로운 역할 구조, 7가지 비용 조합 테이블, 환경 설정 방법(`frugal-config`) 문서화
+- `uninstall.sh`가 `~/.codex/AGENTS.md`, `~/.gemini/config/AGENTS.md`, `~/.frugal-harness/`, `frugal-config`를 정리하도록 확장
+
+### 주요 결정
+- agy나 Codex가 메인 핸들러일 때는 스스로 계획부터 구현/리뷰/배포까지 수행하며 헬퍼는 선택적 fallback 역할만 수행
+- Claude가 메인일 때는 기존과 동일 (Claude가 계획, 헬퍼가 구현)
+
 ## 2026-06-25 — agy AGENTS.md 생성 및 README 전면 개정
 
 ### 완료된 작업
