@@ -423,6 +423,75 @@ if [ "$INSTALL_AGY" = "1" ]; then
 fi
 
 
+# Optional Claude Code skills
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Optional Claude Code Skills"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "  ★ caveman  (STRONGLY RECOMMENDED)"
+echo "    Cuts token usage up to 75% with no loss of technical accuracy."
+echo "    Claude speaks terse caveman-style — same substance, much less output."
+echo ""
+echo "  · grill-me"
+echo "    Relentless Socratic interview to stress-test a plan before coding."
+echo "    Helps catch gaps early and saves tokens on rework later."
+echo ""
+
+if [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "1" ]; then
+  _install_caveman=y
+elif [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "0" ]; then
+  _install_caveman=n
+else
+  printf "Install caveman? [Y/n] "
+  read -r _install_caveman
+  _install_caveman="${_install_caveman:-y}"
+fi
+
+if [[ "$_install_caveman" =~ ^[Yy]$ ]]; then
+  if ! command -v claude &>/dev/null; then
+    echo "  ✗ caveman: claude CLI not found — skipping"
+  else
+    echo "  → Installing caveman plugin..."
+    if claude plugin install caveman 2>&1; then
+      echo "  ✓ caveman installed"
+    else
+      echo "  ✗ caveman install failed — run manually: claude plugin install caveman"
+    fi
+  fi
+else
+  echo "  · caveman skipped"
+fi
+
+echo ""
+
+if [ "${FRUGAL_INSTALL_GRILLME:-}" = "1" ]; then
+  _install_grillme=y
+elif [ "${FRUGAL_INSTALL_GRILLME:-}" = "0" ]; then
+  _install_grillme=n
+else
+  printf "Install grill-me? [Y/n] "
+  read -r _install_grillme
+  _install_grillme="${_install_grillme:-y}"
+fi
+
+if [[ "$_install_grillme" =~ ^[Yy]$ ]]; then
+  mkdir -p "$HOME/.claude/skills/grill-me"
+  cat > "$HOME/.claude/skills/grill-me/SKILL.md" <<'SKILLEOF'
+---
+name: grill-me
+description: A relentless interview to sharpen a plan or design.
+disable-model-invocation: true
+---
+
+Run a `/grilling` session.
+SKILLEOF
+  echo "  ✓ grill-me installed"
+else
+  echo "  · grill-me skipped"
+fi
+
+echo ""
 echo "✅ frugal-harness installed!"
 echo ""
 echo ""
