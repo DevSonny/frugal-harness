@@ -516,4 +516,3 @@ elif [ "$FRUGAL_MAIN" = "agy" ] || [ "$FRUGAL_MAIN" = "codex" ]; then
     echo "Total cost: ~\$20/mo"
   fi
 fi
-# agy-test
