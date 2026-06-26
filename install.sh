@@ -459,6 +459,40 @@ if [[ "$_install_caveman" =~ ^[Yy]$ ]]; then
       echo "  ✗ caveman install failed — run manually: claude plugin install caveman"
     fi
   fi
+
+  if [ "$INSTALL_CODEX" = "1" ]; then
+    CAVEMAN_JS="$HOME/.claude/plugins/marketplaces/caveman/bin/install.js"
+    if [ -f "$CAVEMAN_JS" ]; then
+      if node "$CAVEMAN_JS" --only codex >/dev/null 2>&1; then
+        echo "  ✓ caveman → Codex"
+      else
+        echo "  ✗ caveman → Codex 실패"
+      fi
+    else
+      if npx -y github:JuliusBrussee/caveman -- --only codex >/dev/null 2>&1; then
+        echo "  ✓ caveman → Codex"
+      else
+        echo "  ✗ caveman → Codex 실패"
+      fi
+    fi
+  fi
+
+  if [ "$INSTALL_AGY" = "1" ]; then
+    CAVEMAN_JS="$HOME/.claude/plugins/marketplaces/caveman/bin/install.js"
+    if [ -f "$CAVEMAN_JS" ]; then
+      if node "$CAVEMAN_JS" --only antigravity --force >/dev/null 2>&1; then
+        echo "  ✓ caveman → agy"
+      else
+        echo "  ✗ caveman → agy 실패"
+      fi
+    else
+      if npx -y github:JuliusBrussee/caveman -- --only antigravity --force >/dev/null 2>&1; then
+        echo "  ✓ caveman → agy"
+      else
+        echo "  ✗ caveman → agy 실패"
+      fi
+    fi
+  fi
 else
   echo "  · caveman skipped"
 fi
@@ -487,6 +521,34 @@ disable-model-invocation: true
 Run a `/grilling` session.
 SKILLEOF
   echo "  ✓ grill-me installed"
+
+  if [ "$INSTALL_AGY" = "1" ]; then
+    mkdir -p "$HOME/.agents/skills/grill-me"
+    cat > "$HOME/.agents/skills/grill-me/SKILL.md" <<'SKILLEOF'
+---
+name: grill-me
+description: A relentless interview to sharpen a plan or design.
+disable-model-invocation: true
+---
+
+Run a `/grilling` session.
+SKILLEOF
+    echo "  ✓ grill-me → agy"
+  fi
+
+  if [ "$INSTALL_CODEX" = "1" ]; then
+    mkdir -p "$HOME/.codex/skills/grill-me"
+    cat > "$HOME/.codex/skills/grill-me/SKILL.md" <<'SKILLEOF'
+---
+name: grill-me
+description: A relentless interview to sharpen a plan or design.
+disable-model-invocation: true
+---
+
+Run a `/grilling` session.
+SKILLEOF
+    echo "  ✓ grill-me → Codex"
+  fi
 else
   echo "  · grill-me skipped"
 fi
