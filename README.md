@@ -137,6 +137,8 @@ When agy is used (either as main or helper), it picks a model based on task comp
 | Documentation / README | `Gemini 3.5 Flash (Low)` |
 | Code review | `Gemini 3.1 Pro (Low)` |
 
+> **Important:** The `--model` value must match `agy models` output exactly (case-sensitive, parentheses included). Abbreviated or wrong names (e.g. `"sonnet"`, `"opus"`) silently fall back to `Gemini 3.5 Flash (Medium)` with no error. Run `agy models` to verify exact names.
+
 ### Codex reasoning effort
 
 When Codex is used, default reasoning is `medium` for both planning and implementation. For complex planning, the harness recommends rerunning with `high` or `xhigh`.
