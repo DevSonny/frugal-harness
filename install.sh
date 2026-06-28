@@ -425,19 +425,20 @@ if [ "$INSTALL_AGY" = "1" ]; then
 fi
 
 
-# Optional Claude Code skills
+# Optional skills: caveman + superpowers
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Optional Claude Code Skills"
+echo "Optional Skills"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "  ★ caveman  (STRONGLY RECOMMENDED)"
 echo "    Cuts token usage up to 75% with no loss of technical accuracy."
-echo "    Claude speaks terse caveman-style — same substance, much less output."
+echo "    Official installer auto-detects and installs for ALL agents"
+echo "    (Claude, agy, Codex, Cursor, Windsurf, Copilot, etc.)"
 echo ""
 echo "  · superpowers"
-echo "    Adds powerful new slash commands and capabilities to Claude Code."
-echo "    Installs the superpowers plugin via claude plugin marketplace."
+echo "    Core skills library: TDD, debugging, collaboration patterns."
+echo "    Installed for: Claude, agy, Codex (where supported)."
 echo ""
 
 if [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "1" ]; then
@@ -451,48 +452,33 @@ else
 fi
 
 if [[ "$_install_caveman" =~ ^[Yy]$ ]]; then
-  if ! command -v claude &>/dev/null; then
-    echo "  ✗ caveman: claude CLI not found — skipping"
-  else
-    echo "  → Installing caveman plugin..."
-    if claude plugin install caveman 2>&1; then
-      echo "  ✓ caveman installed"
+  # Claude Code (via plugin marketplace)
+  if command -v claude &>/dev/null; then
+    echo "  → caveman → Claude Code..."
+    if curl -fsSL https://raw.githubusercontent.com/JuliusBrussee/caveman/main/install.sh | bash -s -- --only claude 2>&1; then
+      echo "  ✓ caveman → Claude"
     else
-      echo "  ✗ caveman install failed — run manually: claude plugin install caveman"
+      echo "  ✗ caveman → Claude 실패"
     fi
   fi
 
-  if [ "$INSTALL_CODEX" = "1" ]; then
-    CAVEMAN_JS="$HOME/.claude/plugins/marketplaces/caveman/bin/install.js"
-    if [ -f "$CAVEMAN_JS" ]; then
-      if node "$CAVEMAN_JS" --only codex >/dev/null 2>&1; then
-        echo "  ✓ caveman → Codex"
-      else
-        echo "  ✗ caveman → Codex 실패"
-      fi
+  # Antigravity / agy (soft probe — must be explicit)
+  if [ "$INSTALL_AGY" = "1" ] && command -v agy &>/dev/null; then
+    echo "  → caveman → Antigravity (agy)..."
+    if npx -y skills add JuliusBrussee/caveman -a antigravity --yes 2>&1; then
+      echo "  ✓ caveman → agy"
     else
-      if npx -y github:JuliusBrussee/caveman -- --only codex >/dev/null 2>&1; then
-        echo "  ✓ caveman → Codex"
-      else
-        echo "  ✗ caveman → Codex 실패"
-      fi
+      echo "  ✗ caveman → agy 실패"
     fi
   fi
 
-  if [ "$INSTALL_AGY" = "1" ]; then
-    CAVEMAN_JS="$HOME/.claude/plugins/marketplaces/caveman/bin/install.js"
-    if [ -f "$CAVEMAN_JS" ]; then
-      if node "$CAVEMAN_JS" --only antigravity --force >/dev/null 2>&1; then
-        echo "  ✓ caveman → agy"
-      else
-        echo "  ✗ caveman → agy 실패"
-      fi
+  # Codex CLI
+  if [ "$INSTALL_CODEX" = "1" ] && command -v codex &>/dev/null; then
+    echo "  → caveman → Codex CLI..."
+    if npx -y skills add JuliusBrussee/caveman -a codex --yes 2>&1; then
+      echo "  ✓ caveman → Codex"
     else
-      if npx -y github:JuliusBrussee/caveman -- --only antigravity --force >/dev/null 2>&1; then
-        echo "  ✓ caveman → agy"
-      else
-        echo "  ✗ caveman → agy 실패"
-      fi
+      echo "  ✗ caveman → Codex 실패"
     fi
   fi
 else
@@ -512,15 +498,32 @@ else
 fi
 
 if [[ "$_install_superpowers" =~ ^[Yy]$ ]]; then
-  if ! command -v claude &>/dev/null; then
-    echo "  ✗ superpowers: claude CLI not found — skipping"
-  else
-    echo "  → Installing superpowers plugin..."
-    if claude plugin install superpowers 2>&1; then
-      echo "  ✓ superpowers installed"
+  # Claude Code
+  if command -v claude &>/dev/null; then
+    echo "  → superpowers → Claude Code..."
+    if claude plugin install superpowers@claude-plugins-official 2>&1; then
+      echo "  ✓ superpowers → Claude"
     else
-      echo "  ✗ superpowers install failed — run manually: claude plugin install superpowers"
+      echo "  ✗ superpowers → Claude 실패 (run: claude plugin install superpowers@claude-plugins-official)"
     fi
+  fi
+
+  # agy (Antigravity)
+  if [ "$INSTALL_AGY" = "1" ] && command -v agy &>/dev/null; then
+    echo "  → superpowers → agy..."
+    if agy plugin install https://github.com/obra/superpowers 2>&1; then
+      echo "  ✓ superpowers → agy"
+    else
+      echo "  ✗ superpowers → agy 실패 (run: agy plugin install https://github.com/obra/superpowers)"
+    fi
+  fi
+
+  # Codex CLI: interactive only — cannot be automated
+  if [ "$INSTALL_CODEX" = "1" ] && command -v codex &>/dev/null; then
+    echo ""
+    echo "  ℹ superpowers → Codex CLI requires manual install:"
+    echo "    Open codex, type: /plugins"
+    echo "    Search: superpowers → Select Install Plugin"
   fi
 else
   echo "  · superpowers skipped"
