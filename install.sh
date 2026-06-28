@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+{
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 detect_shell() {
@@ -578,3 +580,5 @@ elif [ "$FRUGAL_MAIN" = "agy" ] || [ "$FRUGAL_MAIN" = "codex" ]; then
     echo "Total cost: ~\$20/mo"
   fi
 fi
+
+}
