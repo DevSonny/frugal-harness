@@ -446,7 +446,7 @@ elif [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "0" ]; then
   _install_caveman=n
 else
   printf "Install caveman? [Y/n] "
-  read -r _install_caveman
+  read -r _install_caveman < /dev/tty
   _install_caveman="${_install_caveman:-y}"
 fi
 
@@ -507,7 +507,7 @@ elif [ "${FRUGAL_INSTALL_GRILLME:-}" = "0" ]; then
   _install_grillme=n
 else
   printf "Install grill-me? [Y/n] "
-  read -r _install_grillme
+  read -r _install_grillme < /dev/tty
   _install_grillme="${_install_grillme:-y}"
 fi
 
