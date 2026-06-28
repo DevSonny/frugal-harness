@@ -106,7 +106,7 @@ The installer prompts you to install these after the main setup:
 | Skill | Agents | Recommendation | What it does |
 |---|---|---|---|
 | **caveman** | Claude Code, Codex, agy | ★ Strongly recommended | Cuts token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
-| **superpowers** | Claude Code | Recommended | Adds powerful slash commands and extra capabilities to Claude Code via the plugin marketplace. |
+| **superpowers** | Claude Code, agy | Recommended | Adds powerful skills and extra capabilities to your agents. |
 
 To install non-interactively:
 
@@ -116,9 +116,23 @@ FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_SUPERPOWERS=1 bash install.sh
 
 Or install individually anytime:
 
+**For Claude Code:**
 ```bash
 claude plugin install caveman
-claude plugin install superpowers
+claude plugin install superpowers@claude-plugins-official
+```
+
+**For Antigravity (agy):**
+```bash
+npx -y skills add JuliusBrussee/caveman -a antigravity --yes
+agy plugin install https://github.com/obra/superpowers
+# Note: agy plugins install globally to ~/.gemini/config/plugins
+```
+
+**For Codex CLI:**
+```bash
+npx -y skills add JuliusBrussee/caveman -a codex --yes
+# superpowers requires manual install via /plugins in the Codex CLI
 ```
 
 ## Configuration (Post-Install)
