@@ -106,18 +106,19 @@ The installer prompts you to install these after the main setup:
 | Skill | Agents | Recommendation | What it does |
 |---|---|---|---|
 | **caveman** | Claude Code, Codex, agy | ★ Strongly recommended | Cuts token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
-| **superpowers** | Claude Code, Codex, agy | Recommended | Relentless Socratic interview to stress-test a plan before coding. Catches gaps early, saves tokens on rework. |
+| **superpowers** | Claude Code | Recommended | Adds powerful slash commands and extra capabilities to Claude Code via the plugin marketplace. |
 
 To install non-interactively:
 
 ```bash
-FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_GRILLME=1 bash install.sh
+FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_SUPERPOWERS=1 bash install.sh
 ```
 
-Or install caveman anytime:
+Or install individually anytime:
 
 ```bash
 claude plugin install caveman
+claude plugin install superpowers
 ```
 
 ## Configuration (Post-Install)

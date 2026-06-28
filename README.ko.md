@@ -106,18 +106,19 @@ FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 | 스킬 | 지원 에이전트 | 추천 | 설명 |
 |---|---|---|---|
 | **caveman** | Claude Code, Codex, agy | ★ 강력 추천 | Claude 출력 토큰을 최대 75% 절감. 기술적 내용 그대로, 응답만 훨씬 짧아짐. |
-| **superpowers** | Claude Code, Codex, agy | 추천 | 계획/설계를 코딩 전에 집요하게 검증하는 소크라테스식 인터뷰. 사전에 허점을 잡아 재작업 토큰 절약. |
+| **superpowers** | Claude Code | 추천 | Claude Code에 강력한 슬래시 커맨드와 추가 기능을 플러그인으로 설치. |
 
 non-interactive 설치:
 
 ```bash
-FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_GRILLME=1 bash install.sh
+FRUGAL_INSTALL_CAVEMAN=1 FRUGAL_INSTALL_SUPERPOWERS=1 bash install.sh
 ```
 
-caveman 단독 설치:
+개별 단독 설치:
 
 ```bash
 claude plugin install caveman
+claude plugin install superpowers
 ```
 
 ## 환경 설정 (설치 후)
