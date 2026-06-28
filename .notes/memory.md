@@ -1,5 +1,30 @@
 # frugal-harness memory
 
+## 2026-06-28 — Warp/cmux 환경 분리 + caveman/superpowers 전체 에이전트 설치
+
+### 완료된 작업
+- **Warp vs cmux HOME 분리 확인**: Warp이 `HOME=/Users/son/.agy_warp_home`으로 재정의 → config 경로가 달라서 skills 안 보였음
+- **config symlink**: `~/.agy_warp_home/.gemini/config` → `/Users/son/.gemini/config` symlink로 두 환경이 같은 global config 공유
+- **oauth 토큰은 자동 분리**: `antigravity-oauth-token`이 `antigravity-cli/` 하위라 HOME이 달라도 독립 유지됨
+- **superpowers → agy 설치**: `agy plugin install https://github.com/obra/superpowers` (14 skills, 1 hook)
+- **install.sh 수정**: caveman/superpowers 섹션을 per-agent 명시 설치로 교체
+
+### 주요 결정
+- caveman 인스톨러 `--only` 플래그로 Gemini CLI는 제외, Antigravity는 `soft probe`라 `--only antigravity` 명시 필요
+- caveman → Claude: `curl ... | bash -s -- --only claude`
+- caveman → agy: `npx -y skills add JuliusBrussee/caveman -a antigravity --yes`
+- caveman → Codex: `npx -y skills add JuliusBrussee/caveman -a codex --yes`
+- superpowers → Claude: `claude plugin install superpowers@claude-plugins-official`
+- superpowers → agy: `agy plugin install https://github.com/obra/superpowers`
+- superpowers → Codex: 인터랙티브 `/plugins` UI라 자동화 불가 → 안내 메시지로 처리
+
+### 에러 및 해결
+- git push SSH key 없어서 실패 → HTTPS remote로 전환
+- caveman auto-detect 인스톨러가 Gemini CLI를 자동 감지해서 설치 → per-agent 방식으로 교체
+- Antigravity는 caveman "soft probe" agent → 자동 감지 안 됨, --only 명시 필요
+
+
+
 ## 2026-06-25 — agy AGENTS.md 생성 및 README 전면 개정
 
 ### 완료된 작업
