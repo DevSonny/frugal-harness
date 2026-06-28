@@ -435,9 +435,9 @@ echo "  ★ caveman  (STRONGLY RECOMMENDED)"
 echo "    Cuts token usage up to 75% with no loss of technical accuracy."
 echo "    Claude speaks terse caveman-style — same substance, much less output."
 echo ""
-echo "  · grill-me"
-echo "    Relentless Socratic interview to stress-test a plan before coding."
-echo "    Helps catch gaps early and saves tokens on rework later."
+echo "  · superpowers"
+echo "    Adds powerful new capabilities and commands to Claude Code."
+echo "    Enhances the agent's context and workflow."
 echo ""
 
 if [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "1" ]; then
@@ -501,58 +501,29 @@ fi
 
 echo ""
 
-if [ "${FRUGAL_INSTALL_GRILLME:-}" = "1" ]; then
-  _install_grillme=y
-elif [ "${FRUGAL_INSTALL_GRILLME:-}" = "0" ]; then
-  _install_grillme=n
+if [ "${FRUGAL_INSTALL_SUPERPOWERS:-}" = "1" ]; then
+  _install_superpowers=y
+elif [ "${FRUGAL_INSTALL_SUPERPOWERS:-}" = "0" ]; then
+  _install_superpowers=n
 else
-  printf "Install grill-me? [Y/n] "
-  read -r _install_grillme < /dev/tty
-  _install_grillme="${_install_grillme:-y}"
+  printf "Install superpowers? [Y/n] "
+  read -r _install_superpowers < /dev/tty
+  _install_superpowers="${_install_superpowers:-y}"
 fi
 
-if [[ "$_install_grillme" =~ ^[Yy]$ ]]; then
-  mkdir -p "$HOME/.claude/skills/grill-me"
-  cat > "$HOME/.claude/skills/grill-me/SKILL.md" <<'SKILLEOF'
----
-name: grill-me
-description: A relentless interview to sharpen a plan or design.
-disable-model-invocation: true
----
-
-Run a `/grilling` session.
-SKILLEOF
-  echo "  ✓ grill-me installed"
-
-  if [ "$INSTALL_AGY" = "1" ]; then
-    mkdir -p "$HOME/.agents/skills/grill-me"
-    cat > "$HOME/.agents/skills/grill-me/SKILL.md" <<'SKILLEOF'
----
-name: grill-me
-description: A relentless interview to sharpen a plan or design.
-disable-model-invocation: true
----
-
-Run a `/grilling` session.
-SKILLEOF
-    echo "  ✓ grill-me → agy"
-  fi
-
-  if [ "$INSTALL_CODEX" = "1" ]; then
-    mkdir -p "$HOME/.codex/skills/grill-me"
-    cat > "$HOME/.codex/skills/grill-me/SKILL.md" <<'SKILLEOF'
----
-name: grill-me
-description: A relentless interview to sharpen a plan or design.
-disable-model-invocation: true
----
-
-Run a `/grilling` session.
-SKILLEOF
-    echo "  ✓ grill-me → Codex"
+if [[ "$_install_superpowers" =~ ^[Yy]$ ]]; then
+  if ! command -v claude &>/dev/null; then
+    echo "  ✗ superpowers: claude CLI not found — skipping"
+  else
+    echo "  → Installing superpowers plugin..."
+    if claude plugin install superpowers 2>&1; then
+      echo "  ✓ superpowers installed"
+    else
+      echo "  ✗ superpowers install failed — run manually: claude plugin install superpowers"
+    fi
   fi
 else
-  echo "  · grill-me skipped"
+  echo "  · superpowers skipped"
 fi
 
 echo ""

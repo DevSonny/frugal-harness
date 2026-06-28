@@ -106,7 +106,7 @@ The installer prompts you to install these after the main setup:
 | Skill | Agents | Recommendation | What it does |
 |---|---|---|---|
 | **caveman** | Claude Code, Codex, agy | ★ Strongly recommended | Cuts token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
-| **grill-me** | Claude Code, Codex, agy | Recommended | Relentless Socratic interview to stress-test a plan before coding. Catches gaps early, saves tokens on rework. |
+| **superpowers** | Claude Code, Codex, agy | Recommended | Relentless Socratic interview to stress-test a plan before coding. Catches gaps early, saves tokens on rework. |
 
 To install non-interactively:
 
