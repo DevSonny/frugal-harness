@@ -436,8 +436,8 @@ echo "    Cuts token usage up to 75% with no loss of technical accuracy."
 echo "    Claude speaks terse caveman-style — same substance, much less output."
 echo ""
 echo "  · superpowers"
-echo "    Adds powerful new capabilities and commands to Claude Code."
-echo "    Enhances the agent's context and workflow."
+echo "    Adds powerful new slash commands and capabilities to Claude Code."
+echo "    Installs the superpowers plugin via claude plugin marketplace."
 echo ""
 
 if [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "1" ]; then
@@ -446,7 +446,7 @@ elif [ "${FRUGAL_INSTALL_CAVEMAN:-}" = "0" ]; then
   _install_caveman=n
 else
   printf "Install caveman? [Y/n] "
-  read -r _install_caveman < /dev/tty
+  read -r _install_caveman < /dev/tty || true
   _install_caveman="${_install_caveman:-y}"
 fi
 
@@ -507,7 +507,7 @@ elif [ "${FRUGAL_INSTALL_SUPERPOWERS:-}" = "0" ]; then
   _install_superpowers=n
 else
   printf "Install superpowers? [Y/n] "
-  read -r _install_superpowers < /dev/tty
+  read -r _install_superpowers < /dev/tty || true
   _install_superpowers="${_install_superpowers:-y}"
 fi
 
