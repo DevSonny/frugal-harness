@@ -291,12 +291,52 @@ function gitBranch(cwd) {
   }
 }
 
-function readStdin() {
-  try {
-    return fs.readFileSync(0, "utf8");
-  } catch {
-    return "";
-  }
+function readStdinAsync() {
+  return new Promise((resolve) => {
+    let data = "";
+    let done = false;
+    
+    // Fallback timeout in case stdin hangs (e.g. agy doesn't close pipe)
+    const timer = setTimeout(() => {
+      if (!done) {
+        done = true;
+        process.stdin.destroy();
+        resolve(data);
+      }
+    }, 200);
+
+    try {
+      const stat = fs.fstatSync(0);
+      // If it's a TTY, don't wait for input
+      if (stat.isCharacterDevice()) {
+        clearTimeout(timer);
+        process.stdin.destroy();
+        resolve("");
+        return;
+      }
+    } catch {}
+
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => {
+      data += chunk;
+    });
+    process.stdin.on("end", () => {
+      if (!done) {
+        done = true;
+        clearTimeout(timer);
+        process.stdin.destroy();
+        resolve(data);
+      }
+    });
+    process.stdin.on("error", () => {
+      if (!done) {
+        done = true;
+        clearTimeout(timer);
+        process.stdin.destroy();
+        resolve(data);
+      }
+    });
+  });
 }
 
 function printDashboard() {
@@ -371,8 +411,9 @@ function loadClaudeApiCache() {
   return null;
 }
 
-function printStatusline() {
-  const input = readJsonFromString(readStdin(), {});
+async function printStatusline() {
+  const stdinStr = await readStdinAsync();
+  const input = readJsonFromString(stdinStr, {});
   const projectDir = input && input.workspace ? input.workspace.project_dir : "";
   const modelName = input && input.model ? input.model.display_name : "";
   const cwd = input && input.cwd ? input.cwd : process.cwd();
@@ -429,16 +470,22 @@ function printStatusline() {
   if (agy) {
     parts.push(`${C.dm}agy${C.rs} ${C.mg}${agy.short}${C.rs}`);
   }
-  console.log(parts.join("  "));
 
   const claudeCost = claudeSessionCost(transcriptPath);
   const codexCost = codexSessionCost(codex);
   const totalCost = claudeCost !== null ? claudeCost + (codexCost ?? 0) : null;
-  console.log(
-    `  Claude ${C.yl}${formatCost(claudeCost)}${C.rs}  ` +
-      `Codex ${C.yl}${formatCost(codexCost)}${C.rs}  ` +
-      `\x1b[1;37mTotal ${formatCost(totalCost)}${C.rs}`
-  );
+  const costStr = `Claude ${C.yl}${formatCost(claudeCost)}${C.rs}  Codex ${C.yl}${formatCost(codexCost)}${C.rs}  \x1b[1;37mTotal ${formatCost(totalCost)}${C.rs}`;
+
+  const IS_AGY = argv.has("--agy");
+
+  if (!IS_AGY && input && Object.keys(input).length > 0) {
+    console.log(parts.join("  "));
+    console.log(`  ${costStr}`);
+  } else {
+    parts.push(costStr);
+    console.log(parts.join("  "));
+  }
+
 }
 
 function readJsonFromString(text, fallback) {
