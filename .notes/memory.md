@@ -1,5 +1,12 @@
 # frugal-harness memory
 
+## 2026-06-30 — 중복 tdd 스킬 제거 및 superpowers 지원 범위 업데이트
+
+### 완료된 작업
+- **중복 tdd 스킬 제거**: superpowers에 이미 test-driven-development 스킬이 내장되어 있어 중복되는 `.agents/skills/tdd/` 삭제.
+- **skills-lock.json 업데이트**: `skills-lock.json` 파일에서 `tdd` 항목 제거.
+- **README 및 README.ko.md 업데이트**: `superpowers` 지원 에이전트에 `Codex`를 추가하고, Codex용 superpowers 설치 안내를 수동 실행 방법 안내로 수정.
+
 ## 2026-06-28 — Warp/cmux 환경 분리 + caveman/superpowers 전체 에이전트 설치
 
 ### 완료된 작업

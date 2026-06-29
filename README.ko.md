@@ -110,7 +110,7 @@ FRUGAL_MAIN=codex FRUGAL_HELPERS=claude bash install.sh
 | 스킬 | 지원 에이전트 | 추천 | 설명 |
 |---|---|---|---|
 | **caveman** | Claude Code, Codex, agy | ★ 강력 추천 | Claude 출력 토큰을 최대 75% 절감. 기술적 내용 그대로, 응답만 훨씬 짧아짐. |
-| **superpowers** | Claude Code, agy | 추천 | 에이전트에 강력한 스킬과 추가 기능을 플러그인으로 설치. |
+| **superpowers** | Claude Code, agy, Codex | 추천 | 에이전트에 강력한 스킬과 추가 기능을 플러그인으로 설치. |
 
 non-interactive 설치:
 
@@ -136,7 +136,7 @@ agy plugin install https://github.com/obra/superpowers
 **Codex CLI용:**
 ```bash
 npx -y skills add JuliusBrussee/caveman -a codex --yes
-# superpowers는 Codex CLI 내에서 /plugins 명령어를 통해 수동 설치해야 합니다.
+# superpowers: Codex CLI 내에서 /plugins 명령어를 실행하여 수동으로 설치
 ```
 
 ## 환경 설정 (설치 후)

@@ -110,7 +110,7 @@ The installer prompts you to install these after the main setup:
 | Skill | Agents | Recommendation | What it does |
 |---|---|---|---|
 | **caveman** | Claude Code, Codex, agy | ★ Strongly recommended | Cuts token output up to 75% with no loss of technical accuracy. Same substance, much shorter responses. |
-| **superpowers** | Claude Code, agy | Recommended | Adds powerful skills and extra capabilities to your agents. |
+| **superpowers** | Claude Code, agy, Codex | Recommended | Adds powerful skills and extra capabilities to your agents. |
 
 To install non-interactively:
 
@@ -136,7 +136,7 @@ agy plugin install https://github.com/obra/superpowers
 **For Codex CLI:**
 ```bash
 npx -y skills add JuliusBrussee/caveman -a codex --yes
-# superpowers requires manual install via /plugins in the Codex CLI
+# superpowers: run /plugins inside Codex CLI to install manually
 ```
 
 ## Configuration (Post-Install)
