@@ -26,6 +26,18 @@ frugal-harness는 계획, 구현, 리뷰, 커밋, 푸시까지 전체 개발 루
 | Codex | 없음 | ~$20/월 (ChatGPT Plus) |
 | Codex | + Claude | ~$40/월 |
 
+### 다른 LLM API 연결 (DeepSeek, Qwen, Kimi 등)
+
+Codex CLI는 OpenAI 호환 API endpoint를 지원합니다. DeepSeek, Qwen, Kimi 등 호환 API key가 있다면 ChatGPT Plus 구독 없이 사용할 수 있습니다:
+
+```bash
+export OPENAI_API_KEY=your-api-key
+export OPENAI_BASE_URL=https://api.deepseek.com  # 또는 해당 provider endpoint
+export OPENAI_MODEL=deepseek-chat                 # 또는 해당 provider 모델명
+```
+
+인스톨러 실행 전에 설정하거나, shell profile에 추가하세요. Claude Code와 agy는 각자 고유한 provider를 사용하므로 이 방법은 Codex CLI에만 해당합니다.
+
 ## 메인 핸들러별 동작 방식
 
 어떤 에이전트를 메인 핸들러로 선택하느냐에 따라 하네스의 동작 방식이 달라집니다.
