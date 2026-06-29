@@ -22,10 +22,11 @@ Available models (run `agy models` to verify — names are exact and case-sensit
 | Task | Recommended Model |
 |------|------|
 | Quick implementation / simple fix | `Gemini 3.5 Flash (Medium)` |
+| Basic implementation | `Gemini 3.1 Pro (Low)` |
 | Complex implementation | `Gemini 3.1 Pro (High)` or `Claude Sonnet 4.6 (Thinking)` |
 | Architecture / judgment-heavy | `Claude Opus 4.6 (Thinking)` |
-| Docs / README / changelog | `Gemini 3.5 Flash (Low)` |
 | Code review | `Gemini 3.1 Pro (Low)` |
+| Docs / README / changelog | configurable (`FRUGAL_DOCS_AGY_MODEL`) |
 
 ## Delegation (Optional)
 If helper agents are installed, you may delegate specific sub-tasks to them using shell commands, but you are fully capable of doing the work yourself.

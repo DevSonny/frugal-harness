@@ -16,10 +16,11 @@ agy --model "<model>" -p "<task description with file path, tech stack, and done
 | 작업 | 모델 |
 |------|------|
 | 빠른 구현 / 간단한 수정 | `Gemini 3.5 Flash (Medium)` |
+| 기본 구현 | `Gemini 3.1 Pro (Low)` |
 | 복잡한 구현 | `Gemini 3.1 Pro (High)` 또는 `Claude Sonnet 4.6 (Thinking)` |
 | 아키텍처 / 판단이 많은 작업 | `Claude Opus 4.6 (Thinking)` |
-| 문서 / README / changelog | `Gemini 3.5 Flash (Low)` |
 | 리뷰 | `Gemini 3.1 Pro (Low)` |
+| 문서 / README / changelog | configurable (`FRUGAL_DOCS_AGY_MODEL`) |
 
 Available models (from `agy models`):
 - `Gemini 3.5 Flash (Low)` — Gemini 쿼터

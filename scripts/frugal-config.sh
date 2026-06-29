@@ -129,6 +129,7 @@ if [ "$INTERACTIVE" -eq 1 ]; then
     esac
   fi
 
+
   if [ "$FRUGAL_MAIN" != "claude" ]; then
     echo ""
     echo "Step 3: Deploy CLAUDE.md anyway?"
@@ -144,12 +145,90 @@ if [ "$INTERACTIVE" -eq 1 ]; then
   else
     FRUGAL_DEPLOY_CLAUDE="yes"
   fi
+
+  echo ""
+  echo "Step 4: Choose agy model tier:"
+  echo "  1) Fast → Flash default"
+  echo "  2) Balanced [recommended] → Pro Low/High"
+  echo "  3) Quality → Pro High default, Opus for arch"
+  echo "  4) Custom → Per-use selection"
+  printf "Choice [%s]: " "${FRUGAL_AGY_TIER:-2}"
+  read -r tier_choice < /dev/tty
+  tier_choice="${tier_choice:-${FRUGAL_AGY_TIER:-2}}"
+  FRUGAL_AGY_TIER="$tier_choice"
+
+  echo ""
+  echo "Step 5: Choose Docs agent:"
+  echo "  1) agy (Gemini 3.1 Pro Low) [default]"
+  echo "  2) Claude Code directly"
+  echo "  3) Codex"
+  printf "Choice [%s]: " "${docs_choice:-1}"
+  read -r docs_choice < /dev/tty
+  docs_choice="${docs_choice:-1}"
+  
+  case "$docs_choice" in
+    1) FRUGAL_DOCS_AGENT="agy" ;;
+    2) FRUGAL_DOCS_AGENT="claude" ;;
+    3) FRUGAL_DOCS_AGENT="codex" ;;
+    *) FRUGAL_DOCS_AGENT="agy" ;;
+  esac
+
 fi
+
+# Apply tier settings to individual model vars
+case "$FRUGAL_AGY_TIER" in
+  1)
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.5 Flash (Medium)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.5 Flash (High)"
+    FRUGAL_AGY_MODEL_COMPLEX="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_ARCH="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.5 Flash (Medium)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.5 Flash (Low)"
+    ;;
+  2)
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.5 Flash (Medium)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_COMPLEX="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_ARCH="Claude Opus 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.1 Pro (Low)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.5 Flash (Low)"
+    ;;
+  3)
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_COMPLEX="Claude Sonnet 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_ARCH="Claude Opus 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.1 Pro (High)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.1 Pro (Low)"
+    ;;
+  4)
+    # Leave as is or load from current
+    : 
+    ;;
+  *)
+    FRUGAL_AGY_TIER="2"
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.5 Flash (Medium)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_COMPLEX="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_ARCH="Claude Opus 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.1 Pro (Low)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.5 Flash (Low)"
+    ;;
+esac
 
 # Save config
 mkdir -p "$HOME/.frugal-harness"
 echo "FRUGAL_MAIN=$FRUGAL_MAIN" > "$CONFIG_FILE"
 echo "FRUGAL_HELPERS=$FRUGAL_HELPERS" >> "$CONFIG_FILE"
+echo "FRUGAL_DEPLOY_CLAUDE=$FRUGAL_DEPLOY_CLAUDE" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_TIER=$FRUGAL_AGY_TIER" >> "$CONFIG_FILE"
+echo "FRUGAL_DOCS_AGENT=$FRUGAL_DOCS_AGENT" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_FAST=\"$FRUGAL_AGY_MODEL_FAST\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_BASIC=\"$FRUGAL_AGY_MODEL_BASIC\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_COMPLEX=\"$FRUGAL_AGY_MODEL_COMPLEX\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_ARCH=\"$FRUGAL_AGY_MODEL_ARCH\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_REVIEW=\"$FRUGAL_AGY_MODEL_REVIEW\"" >> "$CONFIG_FILE"
+echo "FRUGAL_DOCS_AGY_MODEL=\"$FRUGAL_DOCS_AGY_MODEL\"" >> "$CONFIG_FILE"
 echo "FRUGAL_DEPLOY_CLAUDE=$FRUGAL_DEPLOY_CLAUDE" >> "$CONFIG_FILE"
 
 echo ""

@@ -19,9 +19,9 @@ Most AI coding setups assume a $100/mo plan. But frugal-harness lets you build y
 | Main Handler | Helper Agent(s) | Monthly cost |
 |---|---|---|
 | Claude Code | + Codex | ~$40/mo (Claude Pro + ChatGPT Plus) |
-| Claude Code | + agy | ~$40/mo (Claude Pro + Antigravity) |
+| Claude Code | + agy | ~$40/mo (Claude Pro + agy) |
 | Claude Code | + both | ~$60/mo |
-| agy | None | ~$20/mo (Antigravity) |
+| agy | None | ~$20/mo (agy) |
 | agy | + Claude | ~$40/mo |
 | Codex | None | ~$20/mo (ChatGPT Plus) |
 | Codex | + Claude | ~$40/mo |
@@ -61,7 +61,7 @@ The installer can install missing CLIs automatically using official install path
 |---|---|
 | Claude Code | `curl -fsSL https://claude.ai/install.sh \| bash` |
 | Codex CLI | `npm install -g @openai/codex` |
-| Antigravity CLI | `curl -fsSL https://antigravity.google/cli/install.sh \| bash` |
+| agy | `curl -fsSL https://antigravity.google/cli/install.sh \| bash` |
 
 After installation, log in to the CLIs you chose:
 
@@ -122,7 +122,7 @@ claude plugin install caveman
 claude plugin install superpowers@claude-plugins-official
 ```
 
-**For Antigravity (agy):**
+**For agy:**
 ```bash
 npx -y skills add JuliusBrussee/caveman -a antigravity --yes
 agy plugin install https://github.com/obra/superpowers
@@ -168,10 +168,11 @@ When agy is used (either as main or helper), it picks a model based on task comp
 | Task | Model |
 |---|---|
 | Quick implementation / simple fix | `Gemini 3.5 Flash (Medium)` |
+| Basic implementation | `Gemini 3.1 Pro (Low)` |
 | Complex implementation | `Gemini 3.1 Pro (High)` or `Claude Sonnet 4.6 (Thinking)` |
 | Architecture / judgment-heavy | `Claude Opus 4.6 (Thinking)` |
-| Documentation / README | `Gemini 3.5 Flash (Low)` |
 | Code review | `Gemini 3.1 Pro (Low)` |
+| Documentation / README | configurable (`FRUGAL_DOCS_AGY_MODEL`) |
 
 > **Important:** The `--model` value must match `agy models` output exactly (case-sensitive, parentheses included). Abbreviated or wrong names (e.g. `"sonnet"`, `"opus"`) silently fall back to `Gemini 3.5 Flash (Medium)` with no error. Run `agy models` to verify exact names.
 

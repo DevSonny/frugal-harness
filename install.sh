@@ -92,20 +92,40 @@ set_toml_root_key() {
 echo "🪙 frugal-harness installer"
 echo ""
 
+echo "언어 / Language:"
+echo "  1) 한국어"
+echo "  2) English  [default]"
+printf "Choice [2]: "
+read -r lang_choice < /dev/tty
+lang_choice="${lang_choice:-2}"
+
+if [ "$lang_choice" = "1" ] || [ "$lang_choice" = "ko" ]; then
+  LANG_MODE="ko"
+else
+  LANG_MODE="en"
+fi
+
+msg() {
+  local ko="$1"
+  local en="${2:-$1}"
+  if [ "$LANG_MODE" = "ko" ]; then echo -e "$ko"; else echo -e "$en"; fi
+}
+
+
 # Prerequisites check
-echo "Checking prerequisites..."
+msg "필수 항목 확인 중..." "Checking prerequisites..."
 
 MISSING=0
 
 if ! command -v node &> /dev/null; then
-  echo "  ✗ Node.js not found → install Node.js first"
+  msg "  ✗ Node.js 없음 → Node.js를 먼저 설치하세요" "  ✗ Node.js not found → install Node.js first"
   MISSING=1
 else
   echo "  ✓ Node.js ($(node --version 2>/dev/null || echo unknown))"
 fi
 
 if ! command -v npm &> /dev/null; then
-  echo "  ✗ npm not found → install Node.js with npm first"
+  msg "  ✗ npm 없음 → npm과 함께 Node.js를 먼저 설치하세요" "  ✗ npm not found → install Node.js with npm first"
   MISSING=1
 else
   echo "  ✓ npm ($(npm --version 2>/dev/null || echo unknown))"
@@ -113,9 +133,9 @@ fi
 
 if [ $MISSING -eq 1 ]; then
   echo ""
-  echo "⚠ Install Node.js/npm first, then re-run this script."
-  echo "   macOS: https://nodejs.org/ or brew install node"
-  echo "   Linux/WSL: use your distro package manager, nvm, or https://nodejs.org/"
+  msg "⚠ Node.js/npm을 먼저 설치한 후 스크립트를 다시 실행하세요." "⚠ Install Node.js/npm first, then re-run this script."
+  msg "   macOS: https://nodejs.org/ 또는 brew install node" "   macOS: https://nodejs.org/ or brew install node"
+  msg "   Linux/WSL: 배포판 패키지 매니저, nvm, 또는 https://nodejs.org/ 사용" "   Linux/WSL: use your distro package manager, nvm, or https://nodejs.org/"
   exit 1
 fi
 
@@ -126,9 +146,9 @@ if [ -n "${FRUGAL_MAIN:-}" ] && [ -n "${FRUGAL_HELPERS:-}" ]; then
   helper_choice="$FRUGAL_HELPERS"
   deploy_choice="${FRUGAL_DEPLOY_CLAUDE:-yes}"
 else
-  echo "Step 1: Which is your main handler? (The agent you talk to directly)"
+  msg "Step 1: 메인 핸들러를 선택하세요. (직접 대화할 에이전트)" "Step 1: Which is your main handler? (The agent you talk to directly)"
   echo "  1) Claude Code"
-  echo "  2) agy (Antigravity CLI)"
+  echo "  2) agy"
   echo "  3) Codex CLI"
   printf "Choice [%s]: " "${FRUGAL_MAIN:-1}"
   read -r main_choice < /dev/tty
@@ -142,7 +162,7 @@ else
   esac
 
   echo ""
-  echo "Step 2: Install helper agents? (for delegation/fallback)"
+  msg "Step 2: 헬퍼 에이전트를 설치하시겠습니까? (위임/대체용)" "Step 2: Install helper agents? (for delegation/fallback)"
   if [ "$FRUGAL_MAIN" = "claude" ]; then
     echo "  1) Both Codex and agy"
     echo "  2) Codex only"
@@ -191,7 +211,7 @@ else
 
   if [ "$FRUGAL_MAIN" != "claude" ]; then
     echo ""
-    echo "Step 3: Deploy CLAUDE.md anyway?"
+    msg "Step 3: 어쨌든 CLAUDE.md를 배포하시겠습니까?" "Step 3: Deploy CLAUDE.md anyway?"
     echo "  Even though Claude is not your main handler, you can deploy CLAUDE.md"
     echo "  so that if you ever open Claude Code, it knows about your helpers."
     printf "Deploy CLAUDE.md? (y/n) [%s]: " "${FRUGAL_DEPLOY_CLAUDE:-y}"
@@ -207,6 +227,45 @@ else
   fi
 fi
 
+# Model tier selection
+echo ""
+if [ -n "${FRUGAL_AGY_TIER:-}" ]; then
+  tier_choice="$FRUGAL_AGY_TIER"
+else
+  msg "Step 3: agy 모델 티어를 선택하세요. (기본값 설정)" "Step 3: Choose agy model tier. (Default settings)"
+  msg "  1) 속도 우선 (Fast) → Flash default" "  1) Fast → Flash default"
+  msg "  2) 균형 [추천] (Balanced) → Pro Low/High" "  2) Balanced [recommended] → Pro Low/High"
+  msg "  3) 품질 우선 (Quality) → Pro High default, Opus for arch" "  3) Quality → Pro High default, Opus for arch"
+  msg "  4) 직접 설정 (Custom) → Per-use selection" "  4) Custom → Per-use selection"
+  printf "Choice [2]: "
+  read -r tier_choice < /dev/tty
+  tier_choice="${tier_choice:-2}"
+fi
+
+FRUGAL_AGY_TIER="$tier_choice"
+
+# Docs agent selection
+echo ""
+if [ -n "${FRUGAL_DOCS_AGENT:-}" ]; then
+  docs_choice="$FRUGAL_DOCS_AGENT"
+else
+  msg "문서 담당 에이전트 / Docs agent:" "Docs agent:"
+  msg "  1) agy (Gemini 3.1 Pro Low) [default]" "  1) agy (Gemini 3.1 Pro Low) [default]"
+  msg "  2) Claude Code 직접 (Direct)" "  2) Claude Code directly"
+  msg "  3) Codex" "  3) Codex"
+  printf "Choice [1]: "
+  read -r docs_choice < /dev/tty
+  docs_choice="${docs_choice:-1}"
+fi
+
+case "$docs_choice" in
+  1) FRUGAL_DOCS_AGENT="agy" ;;
+  2) FRUGAL_DOCS_AGENT="claude" ;;
+  3) FRUGAL_DOCS_AGENT="codex" ;;
+  *) FRUGAL_DOCS_AGENT="agy" ;;
+esac
+
+
 # Determine install flags
 INSTALL_CODEX=0
 INSTALL_AGY=0
@@ -219,13 +278,62 @@ if [ "$FRUGAL_MAIN" = "claude" ] || [[ "$FRUGAL_HELPERS" == *"claude"* ]]; then 
 # Save configuration
 CONFIG_FILE="$HOME/.frugal-harness/config.sh"
 mkdir -p "$HOME/.frugal-harness"
+
+case "$FRUGAL_AGY_TIER" in
+  1)
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.5 Flash (Medium)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.5 Flash (High)"
+    FRUGAL_AGY_MODEL_COMPLEX="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_ARCH="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.5 Flash (Medium)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.5 Flash (Low)"
+    ;;
+  2)
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.5 Flash (Medium)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_COMPLEX="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_ARCH="Claude Opus 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.1 Pro (Low)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.5 Flash (Low)"
+    ;;
+  3)
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_COMPLEX="Claude Sonnet 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_ARCH="Claude Opus 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.1 Pro (High)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.1 Pro (Low)"
+    ;;
+  4)
+    :
+    ;;
+  *)
+    FRUGAL_AGY_TIER="2"
+    FRUGAL_AGY_MODEL_FAST="Gemini 3.5 Flash (Medium)"
+    FRUGAL_AGY_MODEL_BASIC="Gemini 3.1 Pro (Low)"
+    FRUGAL_AGY_MODEL_COMPLEX="Gemini 3.1 Pro (High)"
+    FRUGAL_AGY_MODEL_ARCH="Claude Opus 4.6 (Thinking)"
+    FRUGAL_AGY_MODEL_REVIEW="Gemini 3.1 Pro (Low)"
+    FRUGAL_DOCS_AGY_MODEL="Gemini 3.5 Flash (Low)"
+    ;;
+esac
+
 echo "FRUGAL_MAIN=$FRUGAL_MAIN" > "$CONFIG_FILE"
 echo "FRUGAL_HELPERS=$FRUGAL_HELPERS" >> "$CONFIG_FILE"
 echo "FRUGAL_DEPLOY_CLAUDE=$FRUGAL_DEPLOY_CLAUDE" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_TIER=$FRUGAL_AGY_TIER" >> "$CONFIG_FILE"
+echo "FRUGAL_DOCS_AGENT=$FRUGAL_DOCS_AGENT" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_FAST=\"$FRUGAL_AGY_MODEL_FAST\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_BASIC=\"$FRUGAL_AGY_MODEL_BASIC\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_COMPLEX=\"$FRUGAL_AGY_MODEL_COMPLEX\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_ARCH=\"$FRUGAL_AGY_MODEL_ARCH\"" >> "$CONFIG_FILE"
+echo "FRUGAL_AGY_MODEL_REVIEW=\"$FRUGAL_AGY_MODEL_REVIEW\"" >> "$CONFIG_FILE"
+echo "FRUGAL_DOCS_AGY_MODEL=\"$FRUGAL_DOCS_AGY_MODEL\"" >> "$CONFIG_FILE"
+
 
 
 echo ""
-echo "Checking CLIs..."
+msg "CLI 확인 중..." "Checking CLIs..."
 
 CLI_MISSING=0
 
@@ -281,7 +389,7 @@ elif [ $CLI_MISSING -eq 1 ]; then
 fi
 
 echo ""
-echo "All prerequisites met. Installing..."
+msg "모든 조건이 충족되었습니다. 설치 중..." "All prerequisites met. Installing..."
 
 REPO_RAW="https://raw.githubusercontent.com/DevSonny/frugal-harness/main"
 SKILLS_DIR="$HOME/.claude/skills"
@@ -428,11 +536,11 @@ fi
 # Optional skills: caveman + superpowers
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Optional Skills"
+msg "선택적 스킬" "Optional Skills"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "  ★ caveman  (STRONGLY RECOMMENDED)"
-echo "    Cuts token usage up to 75% with no loss of technical accuracy."
+msg "  ★ caveman  (강력 추천)" "  ★ caveman  (STRONGLY RECOMMENDED)"
+msg "    기술적 정확도 손실 없이 토큰 사용량을 최대 75% 절감합니다." "    Cuts token usage up to 75% with no loss of technical accuracy."
 echo "    Official installer auto-detects and installs for ALL agents"
 echo "    (Claude, agy, Codex, Cursor, Windsurf, Copilot, etc.)"
 echo ""
@@ -462,9 +570,9 @@ if [[ "$_install_caveman" =~ ^[Yy]$ ]]; then
     fi
   fi
 
-  # Antigravity / agy (soft probe — must be explicit)
+  # agy (soft probe — must be explicit)
   if [ "$INSTALL_AGY" = "1" ] && command -v agy &>/dev/null; then
-    echo "  → caveman → Antigravity (agy)..."
+    echo "  → caveman → agy..."
     if npx -y skills add JuliusBrussee/caveman -a antigravity --yes 2>&1; then
       echo "  ✓ caveman → agy"
     else
@@ -508,7 +616,7 @@ if [[ "$_install_superpowers" =~ ^[Yy]$ ]]; then
     fi
   fi
 
-  # agy (Antigravity)
+  # agy
   if [ "$INSTALL_AGY" = "1" ] && command -v agy &>/dev/null; then
     echo "  → superpowers → agy..."
     if agy plugin install https://github.com/obra/superpowers 2>&1; then
@@ -530,7 +638,7 @@ else
 fi
 
 echo ""
-echo "✅ frugal-harness installed!"
+msg "✅ frugal-harness 설치 완료!" "✅ frugal-harness installed!"
 echo ""
 echo ""
 echo "Configured Agents:"

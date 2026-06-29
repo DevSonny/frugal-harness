@@ -49,7 +49,23 @@ generate_agent_md() {
       echo
       echo "---"
       echo
-      cat "$wrapper_file"
+      
+      local mf="${FRUGAL_AGY_MODEL_FAST:-Gemini 3.5 Flash (Medium)}"
+      local mb="${FRUGAL_AGY_MODEL_BASIC:-Gemini 3.1 Pro (Low)}"
+      local mc="${FRUGAL_AGY_MODEL_COMPLEX:-Gemini 3.1 Pro (High)}"
+      local ma="${FRUGAL_AGY_MODEL_ARCH:-Claude Opus 4.6 (Thinking)}"
+      local md="${FRUGAL_DOCS_AGY_MODEL:-Gemini 3.1 Pro (Low)}"
+      sed \
+        -e "s|Gemini 3.5 Flash (Medium)|$mf|g" \
+        -e "s|Gemini 3.1 Pro (Low)|$mb|g" \
+        -e "s|Gemini 3.1 Pro (High) 또는 Claude Sonnet 4.6 (Thinking)|$mc|g" \
+        -e "s|Gemini 3.1 Pro (High) or Claude Sonnet 4.6 (Thinking)|$mc|g" \
+        -e "s|Gemini 3.1 Pro (High)|$mc|g" \
+        -e "s|Claude Opus 4.6 (Thinking)|$ma|g" \
+        -e "s|configurable (FRUGAL_DOCS_AGY_MODEL env var)|$md|g" \
+        -e "s|configurable (FRUGAL_DOCS_AGY_MODEL)|$md|g" \
+        "$wrapper_file"
+
     } > "$out_file"
     echo "Wrote $out_file ($(wc -l < "$out_file") lines) [Main: $is_main]"
   fi

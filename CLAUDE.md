@@ -5,7 +5,7 @@
 ## Role
 Planning and orchestration only. Do not implement, review code, commit, or push directly during normal operation.
 
-Claude should almost never edit files directly. Prefer delegating edits to Codex or Antigravity. Documentation files may be edited by Claude only when Antigravity and Codex are unavailable or unsuitable and the user has accepted Claude as the documentation fallback.
+Claude should almost never edit files directly. Prefer delegating edits to Codex or agy. Documentation files may be edited by Claude only when agy and Codex are unavailable or unsuitable and the user has accepted Claude as the documentation fallback.
 
 ## Claude Planning Model Routing
 Default to Sonnet for normal planning and orchestration. Do not keep high-cost planning models enabled by default because they burn Claude Pro quota too quickly.
@@ -25,11 +25,14 @@ Use whichever agent(s) are installed; delegate to Claude directly only when none
 - **Codex** (if installed): `codex exec "<path + stack + done-criteria>" < /dev/null`
 - **agy** (if installed): `agy --model "<model>" -p "<task description with file path and done-criteria>"`
   - 빠른 구현/수정: `"Gemini 3.5 Flash (Medium)"` (Gemini 쿼터)
+  - 기본 구현: `"Gemini 3.1 Pro (Low)"`
   - 복잡한 구현: `"Gemini 3.1 Pro (High)"` 또는 `"Claude Sonnet 4.6 (Thinking)"`
   - 아키텍처/판단: `"Claude Opus 4.6 (Thinking)"` (비구글 쿼터)
-  - 문서/README: `"Gemini 3.5 Flash (Low)"` (Gemini 쿼터)
+  - 코드 리뷰: `"Gemini 3.1 Pro (Low)"`
+  - 문서: configurable (`FRUGAL_DOCS_AGY_MODEL` env var)
   - `"GPT-OSS 120B (Medium)"` 사용 금지 (오픈소스 모델)
   - **주의:** 모델명은 `agy models` 출력과 정확히 일치해야 함 (대소문자 구분). 약어나 오타 시 오류 없이 `Gemini 3.5 Flash (Medium)`으로 폴백됨.
+  - Model config can be changed via `frugal-config` command or natural language.
 - Both installed: choose based on task or user preference — either is valid.
 - Neither installed: ask the user for approval before editing source files directly.
 
@@ -38,7 +41,7 @@ This is a soft preference, not a hard block. The user can ask Claude to edit dir
 ## Delegation
 - Implementation and bug fixes: use Codex or agy per Delegation Priority above.
 - Review, commit message, commit, and push: Codex (`codex exec "..." < /dev/null`) or agy (`agy -p "..."`).
-- Docs, READMEs, changelogs, and inline comments: Gemini CLI first (`gemini -p`), then Codex or agy, then Claude only as the final fallback.
+- Docs, READMEs, changelogs, and inline comments: use FRUGAL_DOCS_AGENT (configurable via frugal-config or natural language), then Claude only as the final fallback.
 - Web search and research: Codex (`codex exec "<research question>" < /dev/null`) or agy first — both have web search and preserve Claude's context budget.
 
 ## Workflow Order
@@ -51,3 +54,8 @@ Plan (Claude) -> Implement (Codex | agy) -> Review (Codex | agy) -> Docs (agy ->
 - After quota is restored, return to delegating to Codex or agy.
 - If Claude quota is exhausted or Claude is unavailable, stop and notify the user. The user can switch to Codex CLI directly (`~/.codex/AGENTS.md`) or run agy standalone.
 
+
+## Claude Code Plugins
+- **caveman**: 토큰 압축 커뮤니케이션 모드. `/caveman` 또는 세션 설정으로 활성화.
+- **superpowers**: brainstorming, writing-plans, code-review, verify 스킬 포함.
+  Claude Code 기본 워크플로우에 통합됨. 위임 대상이 아님.
