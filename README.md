@@ -218,17 +218,19 @@ The generated `AGENTS.md` files are auto-generated output. Do not edit them dire
 
 | Generated file | Role |
 |---|---|
-| `~/.claude/CLAUDE.md` | Claude Code rules |
+| `~/.claude/CLAUDE.md` | Claude Code rules (auto-generated: orchestrator or helper mode) |
 | `~/.codex/AGENTS.md` | Codex rules (main handler or helper depending on config) |
 | `~/.gemini/config/AGENTS.md` | agy rules (main handler or helper depending on config) |
 
-- [CLAUDE.ko.md](./CLAUDE.ko.md) — Korean reference translation of CLAUDE.md (not loaded by any agent)
+
 
 Source files:
 
 | File | Role |
 |---|---|
 | `shared/harness-core.md` | Shared policy across all agents |
+| `shared/claude-wrapper-main.md` | Claude as main handler |
+| `shared/claude-wrapper-helper.md` | Claude as helper |
 | `shared/codex-wrapper-main.md` | Codex standalone rules |
 | `shared/codex-wrapper-helper.md` | Codex relay rules |
 | `shared/agy-wrapper-*.md` | agy rules (main/helper) |
