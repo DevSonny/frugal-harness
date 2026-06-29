@@ -206,6 +206,8 @@ The generated `AGENTS.md` files are auto-generated output. Do not edit them dire
 | `~/.codex/AGENTS.md` | Codex rules (main handler or helper depending on config) |
 | `~/.gemini/config/AGENTS.md` | agy rules (main handler or helper depending on config) |
 
+- [CLAUDE.ko.md](./CLAUDE.ko.md) — Korean reference translation of CLAUDE.md (not loaded by any agent)
+
 Source files:
 
 | File | Role |
