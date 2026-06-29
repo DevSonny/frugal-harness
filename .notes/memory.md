@@ -1,5 +1,11 @@
 # frugal-harness memory
 
+## 2026-06-30 — mattpocock 스킬 제거 및 caveman 스킬만 유지
+
+### 완료된 작업
+- **mattpocock/skills 출처 스킬 삭제**: `.agents/skills/` 디렉터리에서 JuliusBrussee/caveman 계열 외의 모든 스킬 제거.
+- **skills-lock.json 업데이트**: `skills-lock.json` 파일에서 mattpocock 계열 스킬들을 제거하고 caveman 계열만 남김.
+
 ## 2026-06-30 — 중복 tdd 스킬 제거 및 superpowers 지원 범위 업데이트
 
 ### 완료된 작업
