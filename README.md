@@ -26,18 +26,6 @@ Most AI coding setups assume a $100/mo plan. But frugal-harness lets you build y
 | Codex | None | ~$20/mo (ChatGPT Plus) |
 | Codex | + Claude | ~$40/mo |
 
-### Using Other LLM APIs (DeepSeek, Qwen, Kimi, etc.)
-
-Codex CLI supports any OpenAI-compatible API endpoint. If you have an API key for DeepSeek, Qwen, Kimi, or another compatible provider, you can use it instead of a ChatGPT Plus subscription:
-
-```bash
-export OPENAI_API_KEY=your-api-key
-export OPENAI_BASE_URL=https://api.deepseek.com  # or provider's endpoint
-export OPENAI_MODEL=deepseek-chat                 # or provider's model name
-```
-
-Set these before running the installer, or add them to your shell profile. Only Codex CLI supports this — Claude Code and agy use their own provider connections.
-
 ## Behavior by Main Handler
 
 The way the harness works depends on which agent you choose as your main handler.
@@ -194,7 +182,7 @@ When agy is used (either as main or helper), it picks a model based on task comp
 
 ### Codex reasoning effort
 
-When Codex is used, default reasoning is `medium` for both planning and implementation. For complex planning, the harness recommends rerunning with `high` or `xhigh`.
+Default effort: medium. For complex planning, recommend high or xhigh — user's choice.
 
 ## Quality Gate
 
