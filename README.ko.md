@@ -36,13 +36,14 @@ frugal-harness는 계획, 구현, 리뷰, 커밋, 푸시까지 전체 개발 루
 | **agy** | End-to-end 에이전트. 계획부터 구현, 리뷰, 커밋, 푸시까지 직접 전부 처리합니다. | Claude, Codex |
 | **Codex CLI** | End-to-end 에이전트. 계획부터 구현, 리뷰, 커밋, 푸시까지 직접 전부 처리합니다. | Claude, agy |
 
-### 워크플로우
+### 메인 핸들러별 워크플로우
 
-일반적인 역할 분리(Claude 오케스트레이션) 시의 워크플로우는 다음과 같습니다:
-Plan (Claude) → Implement (agy 또는 Codex) → Review (agy 또는 Codex) → Docs (설정된 에이전트) → Ship (agy 또는 Codex)
+**Claude Code가 메인일 때 (오케스트레이션 모드):**
+Plan (Claude) → Implement (agy | Codex) → Review (agy | Codex) → Docs (설정된 에이전트) → Ship (agy | Codex)
 
-> [!IMPORTANT]
-> **agy**나 **Codex**를 메인 핸들러로 사용할 때는 스스로 모든 작업을 처리할 수 있습니다. 헬퍼에게 작업을 위임할 필요가 없으며, 헬퍼는 오직 보조 수단(fallback)으로만 존재합니다.
+**agy 또는 Codex가 메인일 때 (End-to-end 모드):**
+Plan → Implement → Review → Commit → Push (메인 핸들러가 전부 직접 처리)
+헬퍼는 선택적 fallback으로만 사용됩니다.
 
 ## 설치 전 준비
 
