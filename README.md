@@ -36,14 +36,12 @@ The way the harness works depends on which agent you choose as your main handler
 | **agy** | End-to-end agent: plans, implements, reviews, commits, and pushes directly. | Claude, Codex |
 | **Codex CLI** | End-to-end agent: plans, implements, reviews, commits, and pushes directly. | Claude, agy |
 
-### Workflow by Main Handler
+### Workflow
 
-**When Claude Code is main (orchestration mode):**
-Plan (Claude) → Implement (agy | Codex) → Review (agy | Codex) → Docs (configured agent) → Ship (agy | Codex)
+Natural language is the primary interface. The main handler takes your request, decides what to do, and acts.
 
-**When agy or Codex is main (end-to-end mode):**
-Plan → Implement → Review → Commit → Push (main handler does everything directly)
-Helpers are optional fallbacks only.
+- **When Claude Code is main:** Claude handles planning and judgment; delegates implementation, review, commit, and push to agy or Codex.
+- **When agy or Codex is main:** The main handler does everything directly — plan, implement, review, commit, push. Helpers are optional fallbacks.
 
 ## Prerequisites
 
