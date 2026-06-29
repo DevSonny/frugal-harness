@@ -56,6 +56,11 @@ Plan (Claude) -> Implement (Codex | agy) -> Review (Codex | agy) -> Docs (agy ->
 
 
 ## Claude Code Plugins
-- **caveman**: 토큰 압축 커뮤니케이션 모드. `/caveman` 또는 세션 설정으로 활성화.
-- **superpowers**: brainstorming, writing-plans, code-review, verify 스킬 포함.
-  Claude Code 기본 워크플로우에 통합됨. 위임 대상이 아님.
+
+### 세션 시작 시 동작
+- **caveman**: SessionStart 훅으로 자동 활성화. 응답 토큰 절감, 기술 내용 유지.
+  수동 전환: `/caveman lite|full|ultra`
+- **superpowers**: 매 응답 전 관련 스킬 체크 필수.
+  - 새 기능·설계·구조 변경 전: `superpowers:brainstorming` 반드시 먼저 실행.
+  - 구현 전 design 없으면 진행 금지.
+  - 스킬 목록 확인: `superpowers:find-skills`
