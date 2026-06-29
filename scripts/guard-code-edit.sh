@@ -38,9 +38,10 @@ case "$path" in
     cat >&2 <<EOF
 HINT: $path is a source-code file.
 
-Consider delegating to Codex for implementation work:
+Consider delegating to Codex or agy for implementation work:
 
   codex exec "<task description with file path, tech stack, and acceptance criteria>" < /dev/null
+  agy --model "Gemini 3.1 Pro (Low)" -p "<task description>"
 
 You may proceed with the direct edit if Codex is unavailable or the user has approved.
 EOF

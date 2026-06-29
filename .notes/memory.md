@@ -1,5 +1,11 @@
 # frugal-harness memory
 
+## 2026-06-30 — guard-code-edit.sh agy 추가 및 config.sh 중복 제거
+
+### 완료된 작업
+- **guard-code-edit.sh 힌트 수정**: 소스코드 편집 Nudge 경고 메시지에 Codex 외에 `agy` 위임 명령어 추가.
+- **frugal-config.sh 중복 라인 삭제**: 설정 저장 시 `FRUGAL_DEPLOY_CLAUDE` 환경변수 저장 라인이 중복되던 문제 해결 (마지막 라인 제거).
+
 ## 2026-06-30 — mattpocock 스킬 제거 및 caveman 스킬만 유지
 
 ### 완료된 작업
