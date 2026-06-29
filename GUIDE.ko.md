@@ -6,6 +6,26 @@
 - **Codex**: 선택적 헬퍼 역할을 수행합니다 (`~/.codex/AGENTS.md` 참조).
 - 두 설정 파일(`CLAUDE.md`와 `AGENTS.md`)은 서로 `@` 참조를 하지 않으며, 각자 독립적인 시스템으로 동작합니다.
 
+## 설정 파일 인클루드 구조
+
+CLAUDE.md와 AGENTS.md는 같은 harness-core.md 내용을 공유하지만 방식이 다르다.
+
+| 파일 | 인클루드 방식 | 시점 |
+|------|--------------|------|
+| CLAUDE.md | `@./shared/harness-core.md` (@ 참조) | 런타임 — Claude Code가 읽을 때 자동 반영 |
+| AGENTS.md | 내용 직접 임베드 | 빌드타임 — sync-agents.sh 실행 시 복붙 |
+
+**AGENTS.md에 @ 참조를 쓰지 않는 이유:**
+agy는 @ 참조를 네이티브로 지원하지 않는다. 작동은 하지만, 매 세션마다 bash 툴 콜로 파일을 읽는 방식이라 오버헤드가 발생한다. 임베드 방식이 더 안정적이고 오프라인에서도 동작한다.
+
+**따라서:**
+- `harness-core.md` 수정 → CLAUDE.md: 즉시 자동 반영
+- `harness-core.md` 수정 → AGENTS.md: `sync-agents.sh` 재실행 필요
+
+```bash
+bash ~/.claude/scripts/sync-agents.sh
+```
+
 ## 워크플로우
 Plan (Claude) → Implement (agy 또는 Codex) → Review (agy 또는 Codex) → Docs (설정된 에이전트) → Ship (agy 또는 Codex)
 
